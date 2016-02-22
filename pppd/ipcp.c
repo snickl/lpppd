@@ -51,6 +51,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -1774,6 +1775,7 @@ ipcp_up(f)
     ipcp_options *ho = &ipcp_hisoptions[f->unit];
     ipcp_options *go = &ipcp_gotoptions[f->unit];
     ipcp_options *wo = &ipcp_wantoptions[f->unit];
+    int ifindex;
 
     IPCPDEBUG(("ipcp: up"));
 
@@ -1885,8 +1887,18 @@ ipcp_up(f)
 	    return;
 	}
 
+	ifindex = if_nametoindex(ifname);
+
 	/* run the pre-up script, if any, and wait for it to finish */
 	ipcp_script(_PATH_IPPREUP, 1);
+
+	/* check if preup script renamed the interface */
+	if (!if_indextoname(ifindex, ifname)) {
+	    if (debug)
+		warn("Interface index %d changed but can't find it");
+	    ipcp_close(f->unit, "Interface configuration failed");
+	    return;
+	}
 
 	/* bring the interface up for IP */
 	if (!sifup(f->unit)) {
