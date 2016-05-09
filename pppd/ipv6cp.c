@@ -1142,6 +1142,7 @@ ipv6_demand_conf(u)
 	return 0;
     if (!sif6addr(u, wo->ourid, wo->hisid))
 	return 0;
+    ipv6cp_script(_PATH_IPV6PREUP, 1);
     if (!sifnpmode(u, PPP_IPV6, NPMODE_QUEUE))
 	return 0;
 
@@ -1228,6 +1229,9 @@ ipv6cp_up(f)
 	sifnpmode(f->unit, PPP_IPV6, NPMODE_PASS);
 
     } else {
+	/* run the pre-up script, if any, and wait for it to finish */
+	ipv6cp_script(_PATH_IPV6PREUP, 1);
+
 	/* bring the interface up for IPv6 */
 	if (!sif6up(f->unit)) {
 	    if (debug)
