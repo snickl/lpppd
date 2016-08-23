@@ -66,7 +66,6 @@ int	aflag;			/* print absolute values, not deltas */
 int	dflag;			/* print data rates, not bytes */
 int	interval, count;
 int	infinite;
-int	unit;
 int	s;			/* socket or /dev/ppp file descriptor */
 int	signalled;		/* set if alarm goes off "early" */
 char	*progname;
@@ -416,11 +415,6 @@ main(argc, argv)
     if (argc > 0)
 	interface = argv[0];
 
-    if (sscanf(interface, PPP_DRV_NAME "%d", &unit) != 1) {
-	fprintf(stderr, "%s: invalid interface '%s' specified\n",
-		progname, interface);
-    }
-
     {
 	struct ifreq ifr;
 
@@ -440,7 +434,6 @@ main(argc, argv)
 	    exit(1);
 	}
     }
-
 
     intpr();
     exit(0);
