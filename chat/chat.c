@@ -82,14 +82,11 @@
  *
  */
 
-#ifndef __STDC__
-#define const
-#endif
-
 #ifndef lint
 static const char rcsid[] = "$Id: chat.c,v 1.30 2004/01/17 05:47:55 carlsonj Exp $";
 #endif
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
@@ -119,20 +116,6 @@ static const char rcsid[] = "$Id: chat.c,v 1.30 2004/01/17 05:47:55 carlsonj Exp
 
 #ifndef SIGTYPE
 #define SIGTYPE void
-#endif
-
-#undef __P
-#undef __V
-
-#ifdef __STDC__
-#include <stdarg.h>
-#define __V(x)	x
-#define __P(x)	x
-#else
-#include <varargs.h>
-#define __V(x)	(va_alist) va_dcl
-#define __P(x)	()
-#define const
 #endif
 
 #ifndef O_NONBLOCK
@@ -209,39 +192,39 @@ int clear_report_next = 0;
 
 int say_next = 0, hup_next = 0;
 
-void *dup_mem __P((void *b, size_t c));
-void *copy_of __P((char *s));
-char *grow __P((char *s, char **p, size_t len));
-void usage __P((void));
-void msgf __P((const char *fmt, ...));
-void fatal __P((int code, const char *fmt, ...));
-SIGTYPE sigalrm __P((int signo));
-SIGTYPE sigint __P((int signo));
-SIGTYPE sigterm __P((int signo));
-SIGTYPE sighup __P((int signo));
-void unalarm __P((void));
-void init __P((void));
-void set_tty_parameters __P((void));
-void echo_stderr __P((int));
-void break_sequence __P((void));
-void terminate __P((int status));
-void do_file __P((char *chat_file));
-int  get_string __P((register char *string));
-int  put_string __P((register char *s));
-int  write_char __P((int c));
-int  put_char __P((int c));
-int  get_char __P((void));
-void chat_send __P((register char *s));
-char *character __P((int c));
-void chat_expect __P((register char *s));
-char *clean __P((register char *s, int sending));
-void break_sequence __P((void));
-void terminate __P((int status));
-void pack_array __P((char **array, int end));
-char *expect_strtok __P((char *, char *));
-int vfmtmsg __P((char *, int, const char *, va_list));	/* vsprintf++ */
+void *dup_mem(void *b, size_t c);
+void *copy_of(char *s);
+char *grow(char *s, char **p, size_t len);
+void usage(void);
+void msgf(const char *fmt, ...);
+void fatal(int code, const char *fmt, ...);
+SIGTYPE sigalrm(int signo);
+SIGTYPE sigint(int signo);
+SIGTYPE sigterm(int signo);
+SIGTYPE sighup(int signo);
+void unalarm(void);
+void init(void);
+void set_tty_parameters(void);
+void echo_stderr(int);
+void break_sequence(void);
+void terminate(int status);
+void do_file(char *chat_file);
+int  get_string(register char *string);
+int  put_string(register char *s);
+int  write_char(int c);
+int  put_char(int c);
+int  get_char(void);
+void chat_send(register char *s);
+char *character(int c);
+void chat_expect(register char *s);
+char *clean(register char *s, int sending);
+void break_sequence(void);
+void terminate(int status);
+void pack_array(char **array, int end);
+char *expect_strtok(char *, char *);
+int vfmtmsg(char *, int, const char *, va_list);	/* vsprintf++ */
 
-int main __P((int, char *[]));
+int main(int, char *[]);
 
 void *dup_mem(b, c)
 void *b;
@@ -495,18 +478,11 @@ char line[1024];
 /*
  * Send a message to syslog and/or stderr.
  */
-void msgf __V((const char *fmt, ...))
+void msgf(const char *fmt, ...)
 {
     va_list args;
 
-#ifdef __STDC__
     va_start(args, fmt);
-#else
-    char *fmt;
-    va_start(args);
-    fmt = va_arg(args, char *);
-#endif
-
     vfmtmsg(line, sizeof(line), fmt, args);
     if (to_log)
 	syslog(LOG_INFO, "%s", line);
@@ -518,20 +494,11 @@ void msgf __V((const char *fmt, ...))
  *	Print an error message and terminate.
  */
 
-void fatal __V((int code, const char *fmt, ...))
+void fatal(int code, const char *fmt, ...)
 {
     va_list args;
 
-#ifdef __STDC__
     va_start(args, fmt);
-#else
-    int code;
-    char *fmt;
-    va_start(args);
-    code = va_arg(args, int);
-    fmt = va_arg(args, char *);
-#endif
-
     vfmtmsg(line, sizeof(line), fmt, args);
     if (to_log)
 	syslog(LOG_ERR, "%s", line);

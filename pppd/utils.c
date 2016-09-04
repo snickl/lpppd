@@ -65,10 +65,10 @@ static const char rcsid[] = RCSID;
 extern char *strerror();
 #endif
 
-static void logit __P((int, char *, va_list));
-static void log_write __P((int, char *));
-static void vslp_printer __P((void *, char *, ...));
-static void format_packet __P((u_char *, int, printer_func, void *));
+static void logit(int, char *, va_list);
+static void log_write(int, char *);
+static void vslp_printer(void *, char *, ...);
+static void format_packet(u_char *, int, printer_func, void *);
 
 struct buffer_info {
     char *ptr;
@@ -123,22 +123,12 @@ strlcat(dest, src, len)
  * Returns the number of chars put into buf.
  */
 int
-slprintf __V((char *buf, int buflen, char *fmt, ...))
+slprintf(char *buf, int buflen, char *fmt, ...)
 {
     va_list args;
     int n;
 
-#if defined(__STDC__)
     va_start(args, fmt);
-#else
-    char *buf;
-    int buflen;
-    char *fmt;
-    va_start(args);
-    buf = va_arg(args, char *);
-    buflen = va_arg(args, int);
-    fmt = va_arg(args, char *);
-#endif
     n = vslprintf(buf, buflen, fmt, args);
     va_end(args);
     return n;
@@ -413,22 +403,13 @@ vslprintf(buf, buflen, fmt, args)
  * vslp_printer - used in processing a %P format
  */
 static void
-vslp_printer __V((void *arg, char *fmt, ...))
+vslp_printer(void *arg, char *fmt, ...)
 {
     int n;
     va_list pvar;
     struct buffer_info *bi;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    void *arg;
-    char *fmt;
-    va_start(pvar);
-    arg = va_arg(pvar, void *);
-    fmt = va_arg(pvar, char *);
-#endif
-
     bi = (struct buffer_info *) arg;
     n = vslprintf(bi->ptr, bi->len, fmt, pvar);
     va_end(pvar);
@@ -539,23 +520,14 @@ end_pr_log()
  * pr_log - printer routine for outputting to syslog
  */
 void
-pr_log __V((void *arg, char *fmt, ...))
+pr_log(void *arg, char *fmt, ...)
 {
 	int l, n;
 	va_list pvar;
 	char *p, *eol;
 	char buf[256];
 
-#if defined(__STDC__)
 	va_start(pvar, fmt);
-#else
-	void *arg;
-	char *fmt;
-	va_start(pvar);
-	arg = va_arg(pvar, void *);
-	fmt = va_arg(pvar, char *);
-#endif
-
 	n = vslprintf(buf, sizeof(buf), fmt, pvar);
 	va_end(pvar);
 
@@ -668,18 +640,11 @@ log_write(level, buf)
  * fatal - log an error message and die horribly.
  */
 void
-fatal __V((char *fmt, ...))
+fatal(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_ERR, fmt, pvar);
     va_end(pvar);
 
@@ -690,18 +655,11 @@ fatal __V((char *fmt, ...))
  * error - log an error message.
  */
 void
-error __V((char *fmt, ...))
+error(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_ERR, fmt, pvar);
     va_end(pvar);
     ++error_count;
@@ -711,18 +669,11 @@ error __V((char *fmt, ...))
  * warn - log a warning message.
  */
 void
-warn __V((char *fmt, ...))
+warn(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_WARNING, fmt, pvar);
     va_end(pvar);
 }
@@ -731,18 +682,11 @@ warn __V((char *fmt, ...))
  * notice - log a notice-level message.
  */
 void
-notice __V((char *fmt, ...))
+notice(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_NOTICE, fmt, pvar);
     va_end(pvar);
 }
@@ -751,18 +695,11 @@ notice __V((char *fmt, ...))
  * info - log an informational message.
  */
 void
-info __V((char *fmt, ...))
+info(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_INFO, fmt, pvar);
     va_end(pvar);
 }
@@ -771,18 +708,11 @@ info __V((char *fmt, ...))
  * dbglog - log a debug message.
  */
 void
-dbglog __V((char *fmt, ...))
+dbglog(char *fmt, ...)
 {
     va_list pvar;
 
-#if defined(__STDC__)
     va_start(pvar, fmt);
-#else
-    char *fmt;
-    va_start(pvar);
-    fmt = va_arg(pvar, char *);
-#endif
-
     logit(LOG_DEBUG, fmt, pvar);
     va_end(pvar);
 }
