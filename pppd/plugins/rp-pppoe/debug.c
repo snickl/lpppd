@@ -13,9 +13,6 @@
 *
 ***********************************************************************/
 
-static char const RCSID[] =
-"$Id: debug.c,v 1.2 2008/06/09 08:34:23 paulus Exp $";
-
 #include "pppoe.h"
 #include <sys/time.h>
 #include <time.h>

@@ -28,8 +28,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: chap-md5.c,v 1.4 2004/11/09 22:39:25 paulus Exp $"
-
 #include <stdlib.h>
 #include <string.h>
 #include "pppd.h"

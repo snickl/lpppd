@@ -40,8 +40,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: fsm.c,v 1.23 2004/11/13 02:28:15 paulus Exp $"
-
 /*
  * TODO:
  * Randomize fsm id on link/init.
@@ -54,8 +52,6 @@
 
 #include "pppd.h"
 #include "fsm.h"
-
-static const char rcsid[] = RCSID;
 
 static void fsm_timeout(void *);
 static void fsm_rconfreq(fsm *, int, u_char *, int);

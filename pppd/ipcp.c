@@ -40,8 +40,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: ipcp.c,v 1.73 2008/05/26 08:33:22 paulus Exp $"
-
 /*
  * TODO:
  */
@@ -60,8 +58,6 @@
 #include "fsm.h"
 #include "ipcp.h"
 #include "pathnames.h"
-
-static const char rcsid[] = RCSID;
 
 /* global vars */
 ipcp_options ipcp_wantoptions[NUM_PPP];	/* Options that we want to request */

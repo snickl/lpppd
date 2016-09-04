@@ -14,9 +14,6 @@
 *
 ***********************************************************************/
 
-static char const RCSID[] =
-"$Id: radattr.c,v 1.2 2004/10/28 00:24:40 paulus Exp $";
-
 #include "pppd.h"
 #include "radiusclient.h"
 #include <stdio.h>

@@ -68,8 +68,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: auth.c,v 1.117 2008/07/01 12:27:56 paulus Exp $"
-
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -114,8 +112,6 @@
 #endif
 #include "pathnames.h"
 #include "session.h"
-
-static const char rcsid[] = RCSID;
 
 /* Bits in scan_authfile return value */
 #define NONWILD_SERVER	1

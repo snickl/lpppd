@@ -40,8 +40,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: lcp.c,v 1.76 2006/05/22 00:04:07 paulus Exp $"
-
 /*
  * TODO:
  */
@@ -55,8 +53,6 @@
 #include "lcp.h"
 #include "chap-new.h"
 #include "magic.h"
-
-static const char rcsid[] = RCSID;
 
 /*
  * When the link comes up we want to be able to wait for a short while,

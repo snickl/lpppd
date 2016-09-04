@@ -57,10 +57,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: ecp.c,v 1.4 2004/11/04 10:02:26 paulus Exp $"
-
-static const char rcsid[] = RCSID;
-
 #include <string.h>
 
 #include "pppd.h"

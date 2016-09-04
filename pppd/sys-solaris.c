@@ -85,8 +85,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: sys-solaris.c,v 1.16 2008/01/30 14:26:53 carlsonj Exp $"
-
 #include <limits.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -165,8 +163,6 @@
 #if !defined(UDP6_DEV_NAME) && defined(SOL2)
 #define	UDP6_DEV_NAME	"/dev/udp6"
 #endif /* !defined(UDP6_DEV_NAME) && defined(SOL2) */
-
-static const char rcsid[] = RCSID;
 
 #if defined(SOL2)
 /*

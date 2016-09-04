@@ -40,8 +40,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: upap.c,v 1.30 2005/07/13 10:41:58 paulus Exp $"
-
 /*
  * TODO:
  */
@@ -51,8 +49,6 @@
 
 #include "pppd.h"
 #include "upap.h"
-
-static const char rcsid[] = RCSID;
 
 static bool hide_password = 1;
 

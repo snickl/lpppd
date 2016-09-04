@@ -81,11 +81,6 @@
  *		(614)451-1883
  *
  */
-
-#ifndef lint
-static const char rcsid[] = "$Id: chat.c,v 1.30 2004/01/17 05:47:55 carlsonj Exp $";
-#endif
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>

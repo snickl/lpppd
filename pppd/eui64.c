@@ -35,11 +35,7 @@
  * $Id: eui64.c,v 1.6 2002/12/04 23:03:32 paulus Exp $
  */
 
-#define RCSID	"$Id: eui64.c,v 1.6 2002/12/04 23:03:32 paulus Exp $"
-
 #include "pppd.h"
-
-static const char rcsid[] = RCSID;
 
 /*
  * eui64_ntoa - Make an ascii representation of an interface identifier

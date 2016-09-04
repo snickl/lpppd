@@ -33,8 +33,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: cbcp.c,v 1.17 2006/05/22 00:04:07 paulus Exp $"
-
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -44,8 +42,6 @@
 #include "cbcp.h"
 #include "fsm.h"
 #include "lcp.h"
-
-static const char rcsid[] = RCSID;
 
 /*
  * Options.

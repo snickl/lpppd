@@ -28,8 +28,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: demand.c,v 1.20 2005/08/25 12:14:18 paulus Exp $"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,8 +49,6 @@
 #include "fsm.h"
 #include "ipcp.h"
 #include "lcp.h"
-
-static const char rcsid[] = RCSID;
 
 char *frame;
 int framelen;

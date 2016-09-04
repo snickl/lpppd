@@ -28,8 +28,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: utils.c,v 1.25 2008/06/03 12:06:37 paulus Exp $"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -58,8 +56,6 @@
 #include "pppd.h"
 #include "fsm.h"
 #include "lcp.h"
-
-static const char rcsid[] = RCSID;
 
 #if defined(SUNOS4)
 extern char *strerror();

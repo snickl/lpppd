@@ -68,8 +68,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: tty.c,v 1.27 2008/07/01 12:27:56 paulus Exp $"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

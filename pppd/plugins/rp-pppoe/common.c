@@ -13,9 +13,6 @@
 *
 ***********************************************************************/
 
-static char const RCSID[] =
-"$Id: common.c,v 1.3 2008/06/09 08:34:23 paulus Exp $";
-
 #define _GNU_SOURCE 1
 #include "pppoe.h"
 #include "pppd/pppd.h"

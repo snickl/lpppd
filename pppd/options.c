@@ -40,8 +40,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: options.c,v 1.102 2008/06/15 06:53:06 paulus Exp $"
-
 #include <ctype.h>
 #include <stdio.h>
 #include <errno.h>
@@ -78,8 +76,6 @@
 #if defined(ultrix) || defined(NeXT)
 char *strdup(char *);
 #endif
-
-static const char rcsid[] = RCSID;
 
 struct option_value {
     struct option_value *next;

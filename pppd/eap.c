@@ -43,8 +43,6 @@
  * Based on draft-ietf-pppext-eap-srp-03.txt.
  */
 
-#define RCSID	"$Id: eap.c,v 1.4 2004/11/09 22:39:25 paulus Exp $"
-
 /*
  * TODO:
  */
@@ -75,8 +73,6 @@
 #ifndef SHA_DIGESTSIZE
 #define	SHA_DIGESTSIZE 20
 #endif
-
-static const char rcsid[] = RCSID;
 
 eap_state eap_states[NUM_PPP];		/* EAP state; one for each unit */
 #ifdef USE_SRP

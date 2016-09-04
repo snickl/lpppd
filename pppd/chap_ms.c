@@ -74,8 +74,6 @@
  *
  */
 
-#define RCSID	"$Id: chap_ms.c,v 1.38 2007/12/01 20:10:51 carlsonj Exp $"
-
 #ifdef CHAPMS
 
 #include <stdio.h>
@@ -93,9 +91,6 @@
 #include "sha1.h"
 #include "pppcrypt.h"
 #include "magic.h"
-
-static const char rcsid[] = RCSID;
-
 
 static void	ascii2unicode(char[], int, u_char[]);
 static void	NTPasswordHash(u_char *, int, u_char[MD4_SIGNATURE_SIZE]);

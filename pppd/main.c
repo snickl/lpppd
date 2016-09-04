@@ -66,8 +66,6 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define RCSID	"$Id: main.c,v 1.156 2008/06/23 11:47:18 paulus Exp $"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -120,8 +118,6 @@
 #ifdef AT_CHANGE
 #include "atcp.h"
 #endif
-
-static const char rcsid[] = RCSID;
 
 /* interface vars */
 char ifname[32];		/* Interface name */

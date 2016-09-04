@@ -42,8 +42,6 @@
 
 #ifdef IPX_CHANGE
 
-#define RCSID	"$Id: ipxcp.c,v 1.24 2005/08/25 23:59:34 paulus Exp $"
-
 /*
  * TODO:
  */
@@ -61,8 +59,6 @@
 #include "ipxcp.h"
 #include "pathnames.h"
 #include "magic.h"
-
-static const char rcsid[] = RCSID;
 
 /* global vars */
 ipxcp_options ipxcp_wantoptions[NUM_PPP];	/* Options that we want to request */
