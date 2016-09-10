@@ -247,7 +247,6 @@ static void cleanup_db(void);
 static void handle_events(void);
 void print_link_stats(void);
 
-extern	char	*ttyname(int);
 extern	char	*getlogin(void);
 int main(int, char *[]);
 
@@ -255,7 +254,6 @@ int main(int, char *[]);
 #undef	O_NONBLOCK
 #define	O_NONBLOCK	O_NDELAY
 #endif
-
 
 /*
  * PPP Data Link Layer "protocol" table.
