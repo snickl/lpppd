@@ -337,11 +337,6 @@ extern struct	bpf_program pass_filter;   /* Filter for pkts to pass */
 extern struct	bpf_program active_filter; /* Filter for link-active pkts */
 #endif
 
-#ifdef MSLANMAN
-extern bool	ms_lanman;	/* Use LanMan password instead of NT */
-				/* Has meaning only with MS-CHAP challenges */
-#endif
-
 /* Values for auth_pending, auth_done */
 #define PAP_WITHPEER	0x1
 #define PAP_PEER	0x2

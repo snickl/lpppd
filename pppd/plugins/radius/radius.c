@@ -26,12 +26,6 @@
 
 #include "pppd.h"
 #include "chap-new.h"
-#ifdef CHAPMS
-#include "chap_ms.h"
-#ifdef MPPE
-#include "md5.h"
-#endif
-#endif
 #include "radiusclient.h"
 #include "fsm.h"
 #include "ipcp.h"
@@ -45,8 +39,6 @@
 #define BUF_LEN 1024
 
 #define MD5_HASH_SIZE	16
-
-#define MSDNS 1
 
 static char *config_file = NULL;
 static int add_avp(char **);
@@ -90,11 +82,6 @@ static int radius_init(char *msg);
 static int get_client_port(char *ifname);
 static int radius_allowed_address(u_int32_t addr);
 static void radius_acct_interim(void *);
-#ifdef MPPE
-static int radius_setmppekeys(VALUE_PAIR *vp, REQUEST_INFO *req_info,
-			      unsigned char *);
-static int radius_setmppekeys2(VALUE_PAIR *vp, REQUEST_INFO *req_info);
-#endif
 
 #ifndef MAXSESSIONID
 #define MAXSESSIONID 32
@@ -340,12 +327,7 @@ radius_chap_verify(char *user, char *ourname, int id,
     int result;
     int challenge_len, response_len;
     u_char cpassword[MAX_RESPONSE_LEN + 1];
-#ifdef MPPE
-    /* Need the RADIUS secret and Request Authenticator to decode MPPE */
-    REQUEST_INFO request_info, *req_info = &request_info;
-#else
     REQUEST_INFO *req_info = NULL;
-#endif
 
     challenge_len = *challenge++;
     response_len = *response++;
@@ -359,10 +341,6 @@ radius_chap_verify(char *user, char *ourname, int id,
 
     /* return error for types we can't handle */
     if ((digest->code != CHAP_MD5)
-#ifdef CHAPMS
-	&& (digest->code != CHAP_MICROSOFT)
-	&& (digest->code != CHAP_MICROSOFT_V2)
-#endif
 	) {
 	error("RADIUS: Challenge type %u unsupported", digest->code);
 	return 0;
@@ -406,46 +384,6 @@ radius_chap_verify(char *user, char *ourname, int id,
 		      cpassword, MD5_HASH_SIZE + 1, VENDOR_NONE);
 	break;
 
-#ifdef CHAPMS
-    case CHAP_MICROSOFT:
-    {
-	/* MS-CHAP-Challenge and MS-CHAP-Response */
-	u_char *p = cpassword;
-
-	if (response_len != MS_CHAP_RESPONSE_LEN)
-	    return 0;
-	*p++ = id;
-	/* The idiots use a different field order in RADIUS than PPP */
-	*p++ = response[MS_CHAP_USENT];
-	memcpy(p, response, MS_CHAP_LANMANRESP_LEN + MS_CHAP_NTRESP_LEN);
-
-	rc_avpair_add(&send, PW_MS_CHAP_CHALLENGE,
-		      challenge, challenge_len, VENDOR_MICROSOFT);
-	rc_avpair_add(&send, PW_MS_CHAP_RESPONSE,
-		      cpassword, MS_CHAP_RESPONSE_LEN + 1, VENDOR_MICROSOFT);
-	break;
-    }
-
-    case CHAP_MICROSOFT_V2:
-    {
-	/* MS-CHAP-Challenge and MS-CHAP2-Response */
-	u_char *p = cpassword;
-
-	if (response_len != MS_CHAP2_RESPONSE_LEN)
-	    return 0;
-	*p++ = id;
-	/* The idiots use a different field order in RADIUS than PPP */
-	*p++ = response[MS_CHAP2_FLAGS];
-	memcpy(p, response, (MS_CHAP2_PEER_CHAL_LEN + MS_CHAP2_RESERVED_LEN
-			     + MS_CHAP2_NTRESP_LEN));
-
-	rc_avpair_add(&send, PW_MS_CHAP_CHALLENGE,
-		      challenge, challenge_len, VENDOR_MICROSOFT);
-	rc_avpair_add(&send, PW_MS_CHAP2_RESPONSE,
-		      cpassword, MS_CHAP2_RESPONSE_LEN + 1, VENDOR_MICROSOFT);
-	break;
-    }
-#endif
     }
 
     if (*remote_number) {
@@ -538,19 +476,7 @@ radius_setparams(VALUE_PAIR *vp, char *msg, REQUEST_INFO *req_info,
 {
     u_int32_t remote;
     int ms_chap2_success = 0;
-#ifdef MPPE
-    int mppe_enc_keys = 0;	/* whether or not these were received */
-    int mppe_enc_policy = 0;
-    int mppe_enc_types = 0;
-#endif
-#ifdef MSDNS
     ipcp_options *wo = &ipcp_wantoptions[0];
-    ipcp_options *ao = &ipcp_allowoptions[0];
-    int got_msdns_1 = 0;
-    int got_msdns_2 = 0;
-    int got_wins_1 = 0;
-    int got_wins_2 = 0;
-#endif
 
     /* Send RADIUS attributes to anyone else who might be interested */
     if (radius_attributes_hook) {
@@ -653,77 +579,6 @@ radius_setparams(VALUE_PAIR *vp, char *msg, REQUEST_INFO *req_info,
 
 
 	} else if (vp->vendorcode == VENDOR_MICROSOFT) {
-#ifdef CHAPMS
-	    switch (vp->attribute) {
-	    case PW_MS_CHAP2_SUCCESS:
-		if ((vp->lvalue != 43) || strncmp(vp->strvalue + 1, "S=", 2)) {
-		    slprintf(msg,BUF_LEN,"RADIUS: bad MS-CHAP2-Success packet");
-		    return -1;
-		}
-		if (message != NULL)
-		    strlcpy(message, vp->strvalue + 1, message_space);
-		ms_chap2_success = 1;
-		break;
-
-#ifdef MPPE
-	    case PW_MS_CHAP_MPPE_KEYS:
-		if (radius_setmppekeys(vp, req_info, challenge) < 0) {
-		    slprintf(msg, BUF_LEN,
-			     "RADIUS: bad MS-CHAP-MPPE-Keys attribute");
-		    return -1;
-		}
-		mppe_enc_keys = 1;
-		break;
-
-	    case PW_MS_MPPE_SEND_KEY:
-	    case PW_MS_MPPE_RECV_KEY:
-		if (radius_setmppekeys2(vp, req_info) < 0) {
-		    slprintf(msg, BUF_LEN,
-			     "RADIUS: bad MS-MPPE-%s-Key attribute",
-			     (vp->attribute == PW_MS_MPPE_SEND_KEY)?
-			     "Send": "Recv");
-		    return -1;
-		}
-		mppe_enc_keys = 1;
-		break;
-
-	    case PW_MS_MPPE_ENCRYPTION_POLICY:
-		mppe_enc_policy = vp->lvalue;	/* save for later */
-		break;
-
-	    case PW_MS_MPPE_ENCRYPTION_TYPES:
-		mppe_enc_types = vp->lvalue;	/* save for later */
-		break;
-
-#endif /* MPPE */
-#ifdef MSDNS
-	    case PW_MS_PRIMARY_DNS_SERVER:
-		ao->dnsaddr[0] = htonl(vp->lvalue);
-		got_msdns_1 = 1;
-		if (!got_msdns_2)
-		    ao->dnsaddr[1] = ao->dnsaddr[0];
-		break;
-	    case PW_MS_SECONDARY_DNS_SERVER:
-		ao->dnsaddr[1] = htonl(vp->lvalue);
-		got_msdns_2 = 1;
-		if (!got_msdns_1)
-		    ao->dnsaddr[0] = ao->dnsaddr[1];
-		break;
-	    case PW_MS_PRIMARY_NBNS_SERVER:
-		ao->winsaddr[0] = htonl(vp->lvalue);
-		got_wins_1 = 1;
-		if (!got_wins_2)
-		    ao->winsaddr[1] = ao->winsaddr[0];
-		break;
-	    case PW_MS_SECONDARY_NBNS_SERVER:
-		ao->winsaddr[1] = htonl(vp->lvalue);
-		got_wins_2 = 1;
-		if (!got_wins_1)
-		    ao->winsaddr[0] = ao->winsaddr[1];
-		break;
-#endif /* MSDNS */
-	    }
-#endif /* CHAPMS */
 	}
 	vp = vp->next;
     }
@@ -732,145 +587,10 @@ radius_setparams(VALUE_PAIR *vp, char *msg, REQUEST_INFO *req_info,
     if (digest && (digest->code == CHAP_MICROSOFT_V2) && !ms_chap2_success)
 	return -1;
 
-#ifdef MPPE
-    /*
-     * Require both policy and key attributes to indicate a valid key.
-     * Note that if the policy value was '0' we don't set the key!
-     */
-    if (mppe_enc_policy && mppe_enc_keys) {
-	mppe_keys_set = 1;
-	/* Set/modify allowed encryption types. */
-	if (mppe_enc_types)
-	    set_mppe_enc_types(mppe_enc_policy, mppe_enc_types);
-    }
-#endif
 
     return 0;
 }
 
-#ifdef MPPE
-/**********************************************************************
-* %FUNCTION: radius_setmppekeys
-* %ARGUMENTS:
-*  vp -- value pair holding MS-CHAP-MPPE-KEYS attribute
-*  req_info -- radius request information used for encryption
-* %RETURNS:
-*  >= 0 on success; -1 on failure
-* %DESCRIPTION:
-*  Decrypt the "key" provided by the RADIUS server for MPPE encryption.
-*  See RFC 2548.
-***********************************************************************/
-static int
-radius_setmppekeys(VALUE_PAIR *vp, REQUEST_INFO *req_info,
-		   unsigned char *challenge)
-{
-    int i;
-    MD5_CTX Context;
-    u_char  plain[32];
-    u_char  buf[16];
-
-    if (vp->lvalue != 32) {
-	error("RADIUS: Incorrect attribute length (%d) for MS-CHAP-MPPE-Keys",
-	      vp->lvalue);
-	return -1;
-    }
-
-    memcpy(plain, vp->strvalue, sizeof(plain));
-
-    MD5_Init(&Context);
-    MD5_Update(&Context, req_info->secret, strlen(req_info->secret));
-    MD5_Update(&Context, req_info->request_vector, AUTH_VECTOR_LEN);
-    MD5_Final(buf, &Context);
-
-    for (i = 0; i < 16; i++)
-	plain[i] ^= buf[i];
-
-    MD5_Init(&Context);
-    MD5_Update(&Context, req_info->secret, strlen(req_info->secret));
-    MD5_Update(&Context, vp->strvalue, 16);
-    MD5_Final(buf, &Context);
-
-    for(i = 0; i < 16; i++)
-	plain[i + 16] ^= buf[i];
-
-    /*
-     * Annoying.  The "key" returned is just the NTPasswordHashHash, which
-     * the NAS (us) doesn't need; we only need the start key.  So we have
-     * to generate the start key, sigh.  NB: We do not support the LM-Key.
-     */
-    mppe_set_keys(challenge, &plain[8]);
-
-    return 0;    
-}
-
-/**********************************************************************
-* %FUNCTION: radius_setmppekeys2
-* %ARGUMENTS:
-*  vp -- value pair holding MS-MPPE-SEND-KEY or MS-MPPE-RECV-KEY attribute
-*  req_info -- radius request information used for encryption
-* %RETURNS:
-*  >= 0 on success; -1 on failure
-* %DESCRIPTION:
-*  Decrypt the key provided by the RADIUS server for MPPE encryption.
-*  See RFC 2548.
-***********************************************************************/
-static int
-radius_setmppekeys2(VALUE_PAIR *vp, REQUEST_INFO *req_info)
-{
-    int i;
-    MD5_CTX Context;
-    u_char  *salt = vp->strvalue;
-    u_char  *crypt = vp->strvalue + 2;
-    u_char  plain[32];
-    u_char  buf[MD5_HASH_SIZE];
-    char    *type = "Send";
-
-    if (vp->attribute == PW_MS_MPPE_RECV_KEY)
-	type = "Recv";
-
-    if (vp->lvalue != 34) {
-	error("RADIUS: Incorrect attribute length (%d) for MS-MPPE-%s-Key",
-	      vp->lvalue, type);
-	return -1;
-    }
-
-    if ((salt[0] & 0x80) == 0) {
-	error("RADIUS: Illegal salt value for MS-MPPE-%s-Key attribute", type);
-	return -1;
-    }
-
-    memcpy(plain, crypt, 32);
-
-    MD5_Init(&Context);
-    MD5_Update(&Context, req_info->secret, strlen(req_info->secret));
-    MD5_Update(&Context, req_info->request_vector, AUTH_VECTOR_LEN);
-    MD5_Update(&Context, salt, 2);
-    MD5_Final(buf, &Context);
-
-    for (i = 0; i < 16; i++)
-	plain[i] ^= buf[i];
-
-    if (plain[0] != sizeof(mppe_send_key) /* 16 */) {
-	error("RADIUS: Incorrect key length (%d) for MS-MPPE-%s-Key attribute",
-	      (int) plain[0], type);
-	return -1;
-    }
-
-    MD5_Init(&Context);
-    MD5_Update(&Context, req_info->secret, strlen(req_info->secret));
-    MD5_Update(&Context, crypt, 16);
-    MD5_Final(buf, &Context);
-
-    plain[16] ^= buf[0]; /* only need the first byte */
-
-    if (vp->attribute == PW_MS_MPPE_SEND_KEY)
-	memcpy(mppe_send_key, plain + 1, 16);
-    else
-	memcpy(mppe_recv_key, plain + 1, 16);
-
-    return 0;
-}
-#endif /* MPPE */
 
 /**********************************************************************
 * %FUNCTION: radius_acct_start

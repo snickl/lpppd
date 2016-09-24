@@ -107,9 +107,6 @@
 #include "upap.h"
 #include "chap-new.h"
 #include "eap.h"
-#ifdef CBCP_SUPPORT
-#include "cbcp.h"
-#endif
 #include "pathnames.h"
 #include "session.h"
 
@@ -220,13 +217,8 @@ bool cryptpap = 0;		/* Passwords in pap-secrets are encrypted */
 bool refuse_pap = 0;		/* Don't wanna auth. ourselves with PAP */
 bool refuse_chap = 0;		/* Don't wanna auth. ourselves with CHAP */
 bool refuse_eap = 0;		/* Don't wanna auth. ourselves with EAP */
-#ifdef CHAPMS
-bool refuse_mschap = 0;		/* Don't wanna auth. ourselves with MS-CHAP */
-bool refuse_mschap_v2 = 0;	/* Don't wanna auth. ourselves with MS-CHAPv2 */
-#else
 bool refuse_mschap = 1;		/* Don't wanna auth. ourselves with MS-CHAP */
 bool refuse_mschap_v2 = 1;	/* Don't wanna auth. ourselves with MS-CHAPv2 */
-#endif
 bool usehostname = 0;		/* Use hostname for our_name */
 bool auth_required = 0;		/* Always require authentication from peer */
 bool allow_any_ip = 0;		/* Allow peer to use any IP address */
@@ -293,24 +285,6 @@ option_t auth_options[] = {
       "Require CHAP authentication from peer",
       OPT_ALIAS | OPT_PRIOSUB | OPT_A2OR | MDTYPE_MD5,
       &lcp_wantoptions[0].chap_mdtype },
-#ifdef CHAPMS
-    { "require-mschap", o_bool, &auth_required,
-      "Require MS-CHAP authentication from peer",
-      OPT_PRIOSUB | OPT_A2OR | MDTYPE_MICROSOFT,
-      &lcp_wantoptions[0].chap_mdtype },
-    { "+mschap", o_bool, &auth_required,
-      "Require MS-CHAP authentication from peer",
-      OPT_ALIAS | OPT_PRIOSUB | OPT_A2OR | MDTYPE_MICROSOFT,
-      &lcp_wantoptions[0].chap_mdtype },
-    { "require-mschap-v2", o_bool, &auth_required,
-      "Require MS-CHAPv2 authentication from peer",
-      OPT_PRIOSUB | OPT_A2OR | MDTYPE_MICROSOFT_V2,
-      &lcp_wantoptions[0].chap_mdtype },
-    { "+mschap-v2", o_bool, &auth_required,
-      "Require MS-CHAPv2 authentication from peer",
-      OPT_ALIAS | OPT_PRIOSUB | OPT_A2OR | MDTYPE_MICROSOFT_V2,
-      &lcp_wantoptions[0].chap_mdtype },
-#endif
 
     { "refuse-pap", o_bool, &refuse_pap,
       "Don't agree to auth to peer with PAP", 1 },
@@ -324,24 +298,6 @@ option_t auth_options[] = {
       "Don't allow CHAP authentication with peer",
       OPT_ALIAS | OPT_A2CLRB | MDTYPE_MD5,
       &lcp_allowoptions[0].chap_mdtype },
-#ifdef CHAPMS
-    { "refuse-mschap", o_bool, &refuse_mschap,
-      "Don't agree to auth to peer with MS-CHAP",
-      OPT_A2CLRB | MDTYPE_MICROSOFT,
-      &lcp_allowoptions[0].chap_mdtype },
-    { "-mschap", o_bool, &refuse_mschap,
-      "Don't allow MS-CHAP authentication with peer",
-      OPT_ALIAS | OPT_A2CLRB | MDTYPE_MICROSOFT,
-      &lcp_allowoptions[0].chap_mdtype },
-    { "refuse-mschap-v2", o_bool, &refuse_mschap_v2,
-      "Don't agree to auth to peer with MS-CHAPv2",
-      OPT_A2CLRB | MDTYPE_MICROSOFT_V2,
-      &lcp_allowoptions[0].chap_mdtype },
-    { "-mschap-v2", o_bool, &refuse_mschap_v2,
-      "Don't allow MS-CHAPv2 authentication with peer",
-      OPT_ALIAS | OPT_A2CLRB | MDTYPE_MICROSOFT_V2,
-      &lcp_allowoptions[0].chap_mdtype },
-#endif
 
     { "require-eap", o_bool, &lcp_wantoptions[0].neg_eap,
       "Require EAP authentication from peer", OPT_PRIOSUB | 1,
@@ -821,16 +777,6 @@ network_phase(unit)
 	}
     }
 
-#ifdef CBCP_SUPPORT
-    /*
-     * If we negotiated callback, do it now.
-     */
-    if (go->neg_cbcp) {
-	new_phase(PHASE_CALLBACK);
-	(*cbcp_protent.open)(unit);
-	return;
-    }
-#endif
 
     /*
      * Process extra options from the secrets file
@@ -939,14 +885,6 @@ auth_peer_success(unit, protocol, prot_flavor, name, namelen)
 	case CHAP_MD5:
 	    bit |= CHAP_MD5_PEER;
 	    break;
-#ifdef CHAPMS
-	case CHAP_MICROSOFT:
-	    bit |= CHAP_MS_PEER;
-	    break;
-	case CHAP_MICROSOFT_V2:
-	    bit |= CHAP_MS2_PEER;
-	    break;
-#endif
 	}
 	break;
     case PPP_PAP:
@@ -1017,14 +955,6 @@ auth_withpeer_success(unit, protocol, prot_flavor)
 	case CHAP_MD5:
 	    bit |= CHAP_MD5_WITHPEER;
 	    break;
-#ifdef CHAPMS
-	case CHAP_MICROSOFT:
-	    bit |= CHAP_MS_WITHPEER;
-	    break;
-	case CHAP_MICROSOFT_V2:
-	    bit |= CHAP_MS2_WITHPEER;
-	    break;
-#endif
 	}
 	break;
     case PPP_PAP:

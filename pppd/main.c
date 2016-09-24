@@ -108,9 +108,6 @@
 #include "tdb.h"
 #endif
 
-#ifdef CBCP_SUPPORT
-#include "cbcp.h"
-#endif
 
 #ifdef IPX_CHANGE
 #include "ipxcp.h"
@@ -272,9 +269,6 @@ struct protent *protocols[] = {
     &lcp_protent,
     &pap_protent,
     &chap_protent,
-#ifdef CBCP_SUPPORT
-    &cbcp_protent,
-#endif
     &ipcp_protent,
 #ifdef INET6
     &ipv6cp_protent,
