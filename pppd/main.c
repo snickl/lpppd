@@ -262,9 +262,6 @@ int main(int, char *[]);
 #define	O_NONBLOCK	O_NDELAY
 #endif
 
-#ifdef ULTRIX
-#define setlogmask(x)
-#endif
 
 /*
  * PPP Data Link Layer "protocol" table.

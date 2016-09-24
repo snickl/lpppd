@@ -49,17 +49,11 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#ifdef SVR4
-#include <sys/mkdev.h>
-#endif
 
 #include "pppd.h"
 #include "fsm.h"
 #include "lcp.h"
 
-#if defined(SUNOS4)
-extern char *strerror();
-#endif
 
 static void logit(int, char *, va_list);
 static void log_write(int, char *);
@@ -771,15 +765,7 @@ complete_read(int fd, void *buf, size_t count)
 
 /* Procedures for locking the serial device using a lock file. */
 #ifndef LOCK_DIR
-#ifdef __linux__
 #define LOCK_DIR	"/var/lock"
-#else
-#ifdef SVR4
-#define LOCK_DIR	"/var/spool/locks"
-#else
-#define LOCK_DIR	"/var/spool/lock"
-#endif
-#endif
 #endif /* LOCK_DIR */
 
 static char lock_file[MAXPATHLEN];
@@ -811,21 +797,6 @@ lock(dev)
     char lock_buffer[12];
     int fd, pid, n;
 
-#ifdef SVR4
-    struct stat sbuf;
-
-    if (stat(dev, &sbuf) < 0) {
-	error("Can't get device number for %s: %m", dev);
-	return -1;
-    }
-    if ((sbuf.st_mode & S_IFMT) != S_IFCHR) {
-	error("Can't lock %s: not a character device", dev);
-	return -1;
-    }
-    slprintf(lock_file, sizeof(lock_file), "%s/LK.%03d.%03d.%03d",
-	     LOCK_DIR, major(sbuf.st_dev),
-	     major(sbuf.st_rdev), minor(sbuf.st_rdev));
-#else
     char *p;
     char lockdev[MAXPATHLEN];
 
@@ -842,7 +813,6 @@ lock(dev)
 	    dev = p + 1;
 
     slprintf(lock_file, sizeof(lock_file), "%s/LCK..%s", LOCK_DIR, dev);
-#endif
 
     while ((fd = open(lock_file, O_EXCL | O_CREAT | O_RDWR, 0644)) < 0) {
 	if (errno != EEXIST) {

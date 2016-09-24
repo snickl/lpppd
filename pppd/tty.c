@@ -517,9 +517,6 @@ int connect_tty()
 {
 	char *connector;
 	int fdflags;
-#ifndef __linux__
-	struct stat statbuf;
-#endif
 	char numbuf[16];
 
 	/*
@@ -590,20 +587,6 @@ int connect_tty()
 		    || fcntl(ttyfd, F_SETFL, fdflags & ~O_NONBLOCK) < 0)
 			warn("Couldn't reset non-blocking mode on device: %m");
 
-#ifndef __linux__
-		/*
-		 * Linux 2.4 and above blocks normal writes to the tty
-		 * when it is in PPP line discipline, so this isn't needed.
-		 */
-		/*
-		 * Do the equivalent of `mesg n' to stop broadcast messages.
-		 */
-		if (fstat(ttyfd, &statbuf) < 0
-		    || fchmod(ttyfd, statbuf.st_mode & ~(S_IWGRP | S_IWOTH)) < 0) {
-			warn("Couldn't restrict write permissions to %s: %m", devnam);
-		} else
-			tty_mode = statbuf.st_mode;
-#endif /* __linux__ */
 
 		/*
 		 * Set line speed, flow control, etc.
@@ -839,12 +822,6 @@ finish_tty()
 
 	restore_tty(real_ttyfd);
 
-#ifndef __linux__
-	if (tty_mode != (mode_t) -1) {
-		if (fchmod(real_ttyfd, tty_mode) != 0)
-			error("Couldn't restore tty permissions");
-	}
-#endif /* __linux__ */
 
 	close(real_ttyfd);
 	real_ttyfd = -1;

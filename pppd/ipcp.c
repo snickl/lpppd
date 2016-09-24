@@ -215,10 +215,8 @@ static option_t ipcp_option_list[] = {
     { "ipcp-no-address", o_bool, &ipcp_wantoptions[0].neg_addr,
       "Disable IP-Address usage", OPT_A2CLR,
       &ipcp_allowoptions[0].neg_addr },
-#ifdef __linux__
     { "noremoteip", o_bool, &noremoteip,
       "Allow peer to have no IP address", 1 },
-#endif
     { "nosendip", o_bool, &ipcp_wantoptions[0].neg_addr,
       "Don't send our IP address to peer", OPT_A2CLR,
       &ipcp_wantoptions[0].old_addrs},
@@ -1888,14 +1886,12 @@ ipcp_up(f)
 	 */
 	mask = GetMask(go->ouraddr);
 
-#if !(defined(SVR4) && (defined(SNI) || defined(__USLC__)))
 	if (!sifaddr(f->unit, go->ouraddr, ho->hisaddr, mask)) {
 	    if (debug)
 		warn("Interface configuration failed");
 	    ipcp_close(f->unit, "Interface configuration failed");
 	    return;
 	}
-#endif
 
 	/* run the pre-up script, if any, and wait for it to finish */
 	ipcp_script(_PATH_IPPREUP, 1);
@@ -1908,14 +1904,6 @@ ipcp_up(f)
 	    return;
 	}
 
-#if (defined(SVR4) && (defined(SNI) || defined(__USLC__)))
-	if (!sifaddr(f->unit, go->ouraddr, ho->hisaddr, mask)) {
-	    if (debug)
-		warn("Interface configuration failed");
-	    ipcp_close(f->unit, "Interface configuration failed");
-	    return;
-	}
-#endif
 	sifnpmode(f->unit, PPP_IP, NPMODE_PASS);
 
 	/* assign a default route through the interface if required */

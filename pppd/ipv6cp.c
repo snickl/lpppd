@@ -1142,10 +1142,6 @@ ipv6_demand_conf(u)
 	return 0;
     if (!sif6addr(u, wo->ourid, wo->hisid))
 	return 0;
-#if !defined(__linux__) && !(defined(SVR4) && (defined(SNI) || defined(__USLC__)))
-    if (!sifup(u))
-	return 0;
-#endif
     if (!sifnpmode(u, PPP_IPV6, NPMODE_QUEUE))
 	return 0;
 
@@ -1301,17 +1297,10 @@ ipv6cp_down(f)
 	sifnpmode(f->unit, PPP_IPV6, NPMODE_QUEUE);
     } else {
 	sifnpmode(f->unit, PPP_IPV6, NPMODE_DROP);
-#if !defined(__linux__) && !(defined(SVR4) && (defined(SNI) || defined(__USLC)))
-	sif6down(f->unit);
-#endif
 	ipv6cp_clear_addrs(f->unit, 
 			   ipv6cp_gotoptions[f->unit].ourid,
 			   ipv6cp_hisoptions[f->unit].hisid);
-#if defined(__linux__)
 	sif6down(f->unit);
-#elif defined(SVR4) && (defined(SNI) || defined(__USLC))
-	sifdown(f->unit);
-#endif
     }
 
     /* Execute the ipv6-down script */

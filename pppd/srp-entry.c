@@ -36,9 +36,7 @@
 #include <ctype.h>
 #include <t_pwd.h>
 
-#ifndef	SOL2
 #define	getpassphrase	getpass
-#endif
 
 #define	HAS_SPACE	1
 #define	HAS_DQUOTE	2

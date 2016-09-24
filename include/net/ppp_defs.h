@@ -103,20 +103,6 @@
 #define PPP_FCS(fcs, c)	(((fcs) >> 8) ^ fcstab[((fcs) ^ (c)) & 0xff])
 
 /*
- * A 32-bit unsigned integral type.
- */
-
-#if !defined(__BIT_TYPES_DEFINED__) && !defined(_BITYPES) \
- && !defined(__FreeBSD__) && (NS_TARGET < 40)
-#ifdef	UINT32_T
-typedef UINT32_T	u_int32_t;
-#else
-typedef unsigned int	u_int32_t;
-typedef unsigned short  u_int16_t;
-#endif
-#endif
-
-/*
  * Extended asyncmap - allows any character to be escaped.
  */
 typedef u_int32_t	ext_accm[8];

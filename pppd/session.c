@@ -116,10 +116,7 @@ static pam_handle_t *pamh = NULL;
  */
 
 static int conversation (int num_msg,
-#ifndef SOL2
-    const
-#endif
-    struct pam_message **msg,
+    const struct pam_message **msg,
     struct pam_response **resp, void *appdata_ptr)
 {
     int replies = 0;

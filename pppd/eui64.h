@@ -42,22 +42,6 @@
 #error	"this file should only be included when INET6 is defined"
 #endif /* not defined(INET6) */
 
-#if defined(SOL2)
-#include <netinet/in.h>
-
-typedef union {
-    uint8_t	e8[8];		/* lower 64-bit IPv6 address */
-    uint32_t	e32[2];		/* lower 64-bit IPv6 address */
-} eui64_t;
-
-/*
- * Declare the two below, since in.h only defines them when _KERNEL
- * is declared - which shouldn't be true when dealing with user-land programs
- */
-#define	s6_addr8	_S6_un._S6_u8
-#define	s6_addr32	_S6_un._S6_u32
-
-#else /* else if not defined(SOL2) */
 
 /*
  * TODO:
@@ -71,7 +55,6 @@ typedef union
     u_int32_t e32[2];
 } eui64_t;
 
-#endif /* defined(SOL2) */
 
 #define eui64_iszero(e)		(((e).e32[0] | (e).e32[1]) == 0)
 #define eui64_equals(e, o)	(((e).e32[0] == (o).e32[0]) && \

@@ -43,18 +43,12 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
-#ifndef STREAMS
 #if defined(__linux__) && defined(__powerpc__) \
     && (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 /* kludge alert! */
 #undef __GLIBC__
 #endif
 #include <sys/socket.h>		/* *BSD, Linux, NeXT, Ultrix etc. */
-#ifndef __linux__
-#include <net/if.h>
-#include <net/ppp_defs.h>
-#include <net/if_ppp.h>
-#else
 /* Linux */
 #if __GLIBC__ >= 2
 #include <asm/types.h>		/* glibc 2 conflicts with linux/types.h */
@@ -65,14 +59,7 @@
 #endif
 #include <linux/ppp_defs.h>
 #include <linux/if_ppp.h>
-#endif /* __linux__ */
 
-#else	/* STREAMS */
-#include <sys/stropts.h>	/* SVR4, Solaris 2, SunOS 4, OSF/1, etc. */
-#include <net/ppp_defs.h>
-#include <net/pppio.h>
-
-#endif	/* STREAMS */
 
 int	vflag, rflag, zflag;	/* select type of display */
 int	aflag;			/* print absolute values, not deltas */
@@ -85,10 +72,6 @@ int	signalled;		/* set if alarm goes off "early" */
 char	*progname;
 char	*interface;
 
-#if defined(SUNOS4) || defined(ULTRIX) || defined(NeXT)
-extern int optind;
-extern char *optarg;
-#endif
 
 /*
  * If PPP_DRV_NAME is not defined, use the legacy "ppp" as the
@@ -126,7 +109,6 @@ catchalarm(arg)
 }
 
 
-#ifndef STREAMS
 static void
 get_ppp_stats(curp)
     struct ppp_stats *curp;
@@ -135,11 +117,9 @@ get_ppp_stats(curp)
 
     memset (&req, 0, sizeof (req));
 
-#ifdef __linux__
     req.stats_ptr = (caddr_t) &req.stats;
 #undef ifr_name
 #define ifr_name ifr__name
-#endif
 
     strncpy(req.ifr_name, interface, sizeof(req.ifr_name));
     if (ioctl(s, SIOCGPPPSTATS, &req) < 0) {
@@ -161,11 +141,9 @@ get_ppp_cstats(csp)
 
     memset (&creq, 0, sizeof (creq));
 
-#ifdef __linux__
     creq.stats_ptr = (caddr_t) &creq.stats;
 #undef  ifr_name
 #define ifr_name ifr__name
-#endif
 
     strncpy(creq.ifr_name, interface, sizeof(creq.ifr_name));
     if (ioctl(s, SIOCGPPPCSTATS, &creq) < 0) {
@@ -181,7 +159,6 @@ get_ppp_cstats(csp)
 	}
     }
 
-#ifdef __linux__
     if (creq.stats.c.bytes_out == 0) {
 	creq.stats.c.bytes_out = creq.stats.c.comp_bytes + creq.stats.c.inc_bytes;
 	creq.stats.c.in_count = creq.stats.c.unc_bytes;
@@ -201,65 +178,10 @@ get_ppp_cstats(csp)
     else
 	creq.stats.d.ratio = 256.0 * creq.stats.d.in_count /
 			     creq.stats.d.bytes_out;
-#endif
 
     *csp = creq.stats;
 }
 
-#else	/* STREAMS */
-
-int
-strioctl(fd, cmd, ptr, ilen, olen)
-    int fd, cmd, ilen, olen;
-    char *ptr;
-{
-    struct strioctl str;
-
-    str.ic_cmd = cmd;
-    str.ic_timout = 0;
-    str.ic_len = ilen;
-    str.ic_dp = ptr;
-    if (ioctl(fd, I_STR, &str) == -1)
-	return -1;
-    if (str.ic_len != olen)
-	fprintf(stderr, "strioctl: expected %d bytes, got %d for cmd %x\n",
-	       olen, str.ic_len, cmd);
-    return 0;
-}
-
-static void
-get_ppp_stats(curp)
-    struct ppp_stats *curp;
-{
-    if (strioctl(s, PPPIO_GETSTAT, curp, 0, sizeof(*curp)) < 0) {
-	fprintf(stderr, "%s: ", progname);
-	if (errno == EINVAL)
-	    fprintf(stderr, "kernel support missing\n");
-	else
-	    perror("couldn't get PPP statistics");
-	exit(1);
-    }
-}
-
-static void
-get_ppp_cstats(csp)
-    struct ppp_comp_stats *csp;
-{
-    if (strioctl(s, PPPIO_GETCSTAT, csp, 0, sizeof(*csp)) < 0) {
-	fprintf(stderr, "%s: ", progname);
-	if (errno == ENOTTY) {
-	    fprintf(stderr, "no kernel compression support\n");
-	    if (zflag)
-		exit(1);
-	    rflag = 0;
-	} else {
-	    perror("couldn't get PPP compression statistics");
-	    exit(1);
-	}
-    }
-}
-
-#endif /* STREAMS */
 
 #define MAX0(a)		((int)(a) > 0? (a): 0)
 #define V(offset)	MAX0(cur.offset - old.offset)
@@ -439,9 +361,6 @@ main(argc, argv)
     char *argv[];
 {
     int c;
-#ifdef STREAMS
-    char *dev;
-#endif
 
     interface = PPP_DRV_NAME "0";
     if ((progname = strrchr(argv[0], '/')) == NULL)
@@ -502,7 +421,6 @@ main(argc, argv)
 		progname, interface);
     }
 
-#ifndef STREAMS
     {
 	struct ifreq ifr;
 
@@ -513,10 +431,8 @@ main(argc, argv)
 	    exit(1);
 	}
 
-#ifdef __linux__
 #undef  ifr_name
 #define ifr_name ifr_ifrn.ifrn_name
-#endif
 	strncpy(ifr.ifr_name, interface, sizeof(ifr.ifr_name));
 	if (ioctl(s, SIOCGIFFLAGS, (caddr_t)&ifr) < 0) {
 	    fprintf(stderr, "%s: nonexistent interface '%s' specified\n",
@@ -525,23 +441,6 @@ main(argc, argv)
 	}
     }
 
-#else	/* STREAMS */
-#ifdef __osf__
-    dev = "/dev/streams/ppp";
-#else
-    dev = "/dev/" PPP_DRV_NAME;
-#endif
-    if ((s = open(dev, O_RDONLY)) < 0) {
-	fprintf(stderr, "%s: couldn't open ", progname);
-	perror(dev);
-	exit(1);
-    }
-    if (strioctl(s, PPPIO_ATTACH, &unit, sizeof(int), 0) < 0) {
-	fprintf(stderr, "%s: ppp%d is not available\n", progname, unit);
-	exit(1);
-    }
-
-#endif	/* STREAMS */
 
     intpr();
     exit(0);
