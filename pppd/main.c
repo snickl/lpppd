@@ -109,9 +109,6 @@
 #endif
 
 
-#ifdef IPX_CHANGE
-#include "ipxcp.h"
-#endif /* IPX_CHANGE */
 #ifdef AT_CHANGE
 #include "atcp.h"
 #endif
@@ -275,9 +272,6 @@ struct protent *protocols[] = {
 #endif
     &ccp_protent,
     &ecp_protent,
-#ifdef IPX_CHANGE
-    &ipxcp_protent,
-#endif
 #ifdef AT_CHANGE
     &atcp_protent,
 #endif

@@ -671,10 +671,6 @@ int  have_route_to(u_int32_t); /* Check if route to addr exists */
 int  set_filters(struct bpf_program *pass, struct bpf_program *active);
 				/* Set filter programs in kernel */
 #endif
-#ifdef IPX_CHANGE
-int  sipxfaddr(int, unsigned long, unsigned char *);
-int  cipxfaddr(int);
-#endif
 int  get_if_hwaddr(u_char *addr, char *name);
 char *get_first_ethernet(void);
 
