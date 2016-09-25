@@ -146,7 +146,13 @@ typedef struct fsm_callbacks {
 #define DEFTIMEOUT	3	/* Timeout time in seconds */
 #define DEFMAXTERMREQS	2	/* Maximum Terminate-Request transmissions */
 #define DEFMAXCONFREQS	10	/* Maximum Configure-Request transmissions */
-#define DEFMAXNAKLOOPS	5	/* Maximum number of nak loops */
+/*
+ * Some 3G modems use repeated IPCP NAKs as a way of stalling
+ * until they can contact a server on the network, so by default
+ * we accept a large number of NAKs before we start treating
+ * them as rejects.
+ */
+#define DEFMAXNAKLOOPS	100	/* Maximum number of nak loops */
 
 
 /*
