@@ -74,6 +74,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pwd.h>
+#include <crypt.h>
 #include <grp.h>
 #include <string.h>
 #include <sys/types.h>
@@ -228,8 +229,6 @@ bool explicit_passwd = 0;	/* Set if "password" option supplied */
 char remote_name[MAXNAMELEN];	/* Peer's name for authentication */
 
 static char *uafname;		/* name of most recent +ua file */
-
-extern char *crypt(const char *, const char *);
 
 /* Prototypes for procedures local to this file. */
 

@@ -33,13 +33,7 @@
 #ifndef PPPCRYPT_H
 #define	PPPCRYPT_H
 
-#ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-
-#ifndef USE_CRYPT
-#include <des.h>
-#endif
 
 extern bool	DesSetkey(u_char *);
 extern bool	DesEncrypt(u_char *, u_char *);
