@@ -54,7 +54,6 @@
 #include "fsm.h"
 #include "lcp.h"
 
-
 static void logit(int, char *, va_list);
 static void log_write(int, char *);
 static void vslp_printer(void *, char *, ...);
@@ -777,23 +776,6 @@ int
 lock(dev)
     char *dev;
 {
-#ifdef LOCKLIB
-    int result;
-
-    result = mklock (dev, (void *) 0);
-    if (result == 0) {
-	strlcpy(lock_file, dev, sizeof(lock_file));
-	return 0;
-    }
-
-    if (result > 0)
-        notice("Device %s is locked by pid %d", dev, result);
-    else
-	error("Can't create lock file %s", lock_file);
-    return -1;
-
-#else /* LOCKLIB */
-
     char lock_buffer[12];
     int fd, pid, n;
 
@@ -873,8 +855,6 @@ lock(dev)
 #endif
     close(fd);
     return 0;
-
-#endif
 }
 
 /*
@@ -890,11 +870,6 @@ int
 relock(pid)
     int pid;
 {
-#ifdef LOCKLIB
-    /* XXX is there a way to do this? */
-    return -1;
-#else /* LOCKLIB */
-
     int fd;
     char lock_buffer[12];
 
@@ -915,8 +890,6 @@ relock(pid)
 #endif /* LOCK_BINARY */
     close(fd);
     return 0;
-
-#endif /* LOCKLIB */
 }
 
 /*
@@ -926,11 +899,7 @@ void
 unlock()
 {
     if (lock_file[0]) {
-#ifdef LOCKLIB
-	(void) rmlock(lock_file, (void *) 0);
-#else
 	unlink(lock_file);
-#endif
 	lock_file[0] = 0;
     }
 }

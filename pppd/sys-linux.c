@@ -140,10 +140,6 @@
 #include <linux/filter.h>
 #endif /* PPP_FILTER */
 
-#ifdef LOCKLIB
-#include <sys/locks.h>
-#endif
-
 #ifdef INET6
 #ifndef _LINUX_IN6_H
 /*
