@@ -260,7 +260,6 @@ static option_t ipv6cp_option_list[] = {
    { NULL }
 };
 
-
 /*
  * Protocol entry points from main code.
  */
@@ -298,7 +297,7 @@ struct protent ipv6cp_protent = {
 };
 
 static void ipv6cp_clear_addrs(int, eui64_t, eui64_t);
-static void ipv6cp_script(char *);
+static void ipv6cp_script(char *, int);	/* Run an up/down script */
 static void ipv6cp_script_done(void *);
 
 /*
@@ -1265,7 +1264,7 @@ ipv6cp_up(f)
      */
     if (ipv6cp_script_state == s_down && ipv6cp_script_pid == 0) {
 	ipv6cp_script_state = s_up;
-	ipv6cp_script(_PATH_IPV6UP);
+	ipv6cp_script(_PATH_IPV6UP, 0);
     }
 }
 
@@ -1310,7 +1309,7 @@ ipv6cp_down(f)
     /* Execute the ipv6-down script */
     if (ipv6cp_script_state == s_up && ipv6cp_script_pid == 0) {
 	ipv6cp_script_state = s_down;
-	ipv6cp_script(_PATH_IPV6DOWN);
+	ipv6cp_script(_PATH_IPV6DOWN, 0);
     }
 }
 
@@ -1353,13 +1352,13 @@ ipv6cp_script_done(arg)
     case s_up:
 	if (ipv6cp_fsm[0].state != OPENED) {
 	    ipv6cp_script_state = s_down;
-	    ipv6cp_script(_PATH_IPV6DOWN);
+	    ipv6cp_script(_PATH_IPV6DOWN, 0);
 	}
 	break;
     case s_down:
 	if (ipv6cp_fsm[0].state == OPENED) {
 	    ipv6cp_script_state = s_up;
-	    ipv6cp_script(_PATH_IPV6UP);
+	    ipv6cp_script(_PATH_IPV6UP, 0);
 	}
 	break;
     }
@@ -1371,8 +1370,9 @@ ipv6cp_script_done(arg)
  * interface-name tty-name speed local-LL remote-LL.
  */
 static void
-ipv6cp_script(script)
+ipv6cp_script(script, wait)
     char *script;
+    int wait;
 {
     char strspeed[32], strlocal[32], strremote[32];
     char *argv[8];
@@ -1389,9 +1389,11 @@ ipv6cp_script(script)
     argv[5] = strremote;
     argv[6] = ipparam;
     argv[7] = NULL;
-
-    ipv6cp_script_pid = run_program(script, argv, 0, ipv6cp_script_done,
-				    NULL, 0);
+    if (wait)
+	run_program(script, argv, 0, NULL, NULL, 1);
+    else
+	ipv6cp_script_pid = run_program(script, argv, 0, ipv6cp_script_done,
+					NULL, 0);
 }
 
 /*
