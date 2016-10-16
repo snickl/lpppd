@@ -1,0 +1,6 @@
+#cmakedefine HAVE_SHADOW_H 1
+#cmakedefine HAVE_CRYPT_H 1
+#cmakedefine HAVE_PCAPBPF_H 1
+#cmakedefine HAVE_MMAP 1
+#cmakedefine HAVE_PREAD 1
+#cmakedefine HAVE_PWRITE 1
