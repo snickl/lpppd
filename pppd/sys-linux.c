@@ -299,12 +299,12 @@ static int modify_flags(int fd, int clear_bits, int set_bits)
 void sys_init(void)
 {
     /* Get an internet socket for doing socket ioctls. */
-    sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    sock_fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (sock_fd < 0)
 	fatal("Couldn't create IP socket: %m(%d)", errno);
 
 #ifdef INET6
-    sock6_fd = socket(AF_INET6, SOCK_DGRAM, 0);
+    sock6_fd = socket(AF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (sock6_fd < 0)
 	sock6_fd = -errno;	/* save errno for later */
 #endif
@@ -454,7 +454,7 @@ int generic_establish_ppp (int fd)
 	    goto err;
 	}
 	dbglog("using channel %d", chindex);
-	fd = open("/dev/ppp", O_RDWR);
+	fd = open("/dev/ppp", O_RDWR | O_CLOEXEC);
 	if (fd < 0) {
 	    error("Couldn't reopen /dev/ppp: %m");
 	    goto err;
@@ -614,7 +614,7 @@ static int make_ppp_unit()
 		dbglog("in make_ppp_unit, already had /dev/ppp open?");
 		close(ppp_dev_fd);
 	}
-	ppp_dev_fd = open("/dev/ppp", O_RDWR);
+	ppp_dev_fd = open("/dev/ppp", O_RDWR | O_CLOEXEC);
 	if (ppp_dev_fd < 0)
 		fatal("Couldn't open /dev/ppp: %m");
 	flags = fcntl(ppp_dev_fd, F_GETFL);
@@ -688,7 +688,7 @@ int bundle_attach(int ifnum)
 	if (!new_style_driver)
 		return -1;
 
-	master_fd = open("/dev/ppp", O_RDWR);
+	master_fd = open("/dev/ppp", O_RDWR | O_CLOEXEC);
 	if (master_fd < 0)
 		fatal("Couldn't open /dev/ppp: %m");
 	if (ioctl(master_fd, PPPIOCATTACH, &ifnum) < 0) {
@@ -1410,7 +1410,7 @@ static char *path_to_procfs(const char *tail)
 	/* Default the mount location of /proc */
 	strlcpy (proc_path, "/proc", sizeof(proc_path));
 	proc_path_len = 5;
-	fp = fopen(MOUNTED, "r");
+	fp = fopen(MOUNTED, "re");
 	if (fp != NULL) {
 	    while ((mntent = getmntent(fp)) != NULL) {
 		if (strcmp(mntent->mnt_type, MNTTYPE_IGNORE) == 0)
@@ -1470,7 +1470,7 @@ static int open_route_table (void)
     close_route_table();
 
     path = path_to_procfs("/net/route");
-    route_fd = fopen (path, "r");
+    route_fd = fopen (path, "re");
     if (route_fd == NULL) {
 	error("can't open routing table %s: %m", path);
 	return 0;
@@ -1721,7 +1721,7 @@ int sifproxyarp (int unit, u_int32_t his_adr)
 	if (tune_kernel) {
 	    forw_path = path_to_procfs("/sys/net/ipv4/ip_forward");
 	    if (forw_path != 0) {
-		int fd = open(forw_path, O_WRONLY);
+		int fd = open(forw_path, O_WRONLY | O_CLOEXEC);
 		if (fd >= 0) {
 		    if (write(fd, "1", 1) != 1)
 			error("Couldn't enable IP forwarding: %m");
@@ -1863,7 +1863,7 @@ get_if_hwaddr(u_char *addr, char *name)
 	struct ifreq ifreq;
 	int ret, sock_fd;
 
-	sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	sock_fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
 	if (sock_fd < 0)
 		return 0;
 	memset(&ifreq.ifr_hwaddr, 0, sizeof(struct sockaddr));
@@ -2036,7 +2036,7 @@ int ppp_available(void)
     sscanf(utsname.release, "%d.%d.%d", &osmaj, &osmin, &ospatch);
     kernel_version = KVERSION(osmaj, osmin, ospatch);
 
-    fd = open("/dev/ppp", O_RDWR);
+    fd = open("/dev/ppp", O_RDWR | O_CLOEXEC);
     if (fd >= 0) {
 	new_style_driver = 1;
 
@@ -2073,7 +2073,7 @@ int ppp_available(void)
 /*
  * Open a socket for doing the ioctl operations.
  */
-    s = socket(AF_INET, SOCK_DGRAM, 0);
+    s = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (s < 0)
 	return 0;
 
@@ -2214,7 +2214,7 @@ void logwtmp (const char *line, const char *name, const char *host)
 #if __GLIBC__ >= 2
     updwtmp(_PATH_WTMP, &ut);
 #else
-    wtmp = open(_PATH_WTMP, O_APPEND|O_WRONLY);
+    wtmp = open(_PATH_WTMP, O_APPEND | O_WRONLY | O_CLOEXEC);
     if (wtmp >= 0) {
 	flock(wtmp, LOCK_EX);
 
@@ -2438,7 +2438,7 @@ int sifaddr (int unit, u_int32_t our_adr, u_int32_t his_adr,
 	int fd;
 
 	path = path_to_procfs("/sys/net/ipv4/ip_dynaddr");
-	if (path != 0 && (fd = open(path, O_WRONLY)) >= 0) {
+	if (path != 0 && (fd = open(path, O_WRONLY | O_CLOEXEC)) >= 0) {
 	    if (write(fd, "1", 1) != 1)
 		error("Couldn't enable dynamic IP addressing: %m");
 	    close(fd);
@@ -2614,7 +2614,7 @@ get_pty(master_fdp, slave_fdp, slave_name, uid)
     /*
      * Try the unix98 way first.
      */
-    mfd = open("/dev/ptmx", O_RDWR);
+    mfd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     if (mfd >= 0) {
 	int ptn;
 	if (ioctl(mfd, TIOCGPTN, &ptn) >= 0) {
@@ -2625,7 +2625,7 @@ get_pty(master_fdp, slave_fdp, slave_name, uid)
 	    if (ioctl(mfd, TIOCSPTLCK, &ptn) < 0)
 		warn("Couldn't unlock pty slave %s: %m", pty_name);
 #endif
-	    if ((sfd = open(pty_name, O_RDWR | O_NOCTTY)) < 0)
+	    if ((sfd = open(pty_name, O_RDWR | O_NOCTTY | O_CLOEXEC)) < 0)
 		warn("Couldn't open pty slave %s: %m", pty_name);
 	}
     }
@@ -2636,10 +2636,10 @@ get_pty(master_fdp, slave_fdp, slave_name, uid)
 	for (i = 0; i < 64; ++i) {
 	    slprintf(pty_name, sizeof(pty_name), "/dev/pty%c%x",
 		     'p' + i / 16, i % 16);
-	    mfd = open(pty_name, O_RDWR, 0);
+	    mfd = open(pty_name, O_RDWR | O_CLOEXEC, 0);
 	    if (mfd >= 0) {
 		pty_name[5] = 't';
-		sfd = open(pty_name, O_RDWR | O_NOCTTY, 0);
+		sfd = open(pty_name, O_RDWR | O_NOCTTY | O_CLOEXEC, 0);
 		if (sfd >= 0) {
 		    fchown(sfd, uid, -1);
 		    fchmod(sfd, S_IRUSR | S_IWUSR);
@@ -2795,7 +2795,7 @@ ether_to_eui64(eui64_t *p_eui64)
     int skfd;
     const unsigned char *ptr;
 
-    skfd = socket(PF_INET6, SOCK_DGRAM, 0);
+    skfd = socket(PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if(skfd == -1)
     {
         warn("could not open IPv6 socket");

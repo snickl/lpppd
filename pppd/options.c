@@ -428,7 +428,7 @@ options_from_file(filename, must_exist, check_prot, priv)
 	option_error("unable to drop privileges to open %s: %m", filename);
 	return 0;
     }
-    f = fopen(filename, "r");
+    f = fopen(filename, "re");
     err = errno;
     if (check_prot && seteuid(euid) == -1)
 	fatal("unable to regain privileges");
@@ -1544,9 +1544,9 @@ setlogfile(argv)
 	option_error("unable to drop permissions to open %s: %m", *argv);
 	return 0;
     }
-    fd = open(*argv, O_WRONLY | O_APPEND | O_CREAT | O_EXCL, 0644);
+    fd = open(*argv, O_WRONLY | O_APPEND | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
     if (fd < 0 && errno == EEXIST)
-	fd = open(*argv, O_WRONLY | O_APPEND);
+	fd = open(*argv, O_WRONLY | O_APPEND | O_CLOEXEC);
     err = errno;
     if (!privileged_option && seteuid(euid) == -1)
 	fatal("unable to regain privileges: %m");
