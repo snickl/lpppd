@@ -912,4 +912,13 @@ extern void (*snoop_send_hook)(unsigned char *p, int len);
 #define offsetof(type, member) ((size_t) &((type *)0)->member)
 #endif
 
+#ifdef __linux__
+#ifndef O_CLOEXEC
+#define O_CLOEXEC       02000000
+#endif
+#ifndef SOCK_CLOEXEC
+#define SOCK_CLOEXEC    02000000
+#endif
+#endif
+
 #endif /* __PPP_H__ */
