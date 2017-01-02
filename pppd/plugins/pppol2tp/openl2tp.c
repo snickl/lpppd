@@ -47,7 +47,6 @@
 #include <linux/if_ether.h>
 #include <linux/ppp_defs.h>
 #include <linux/if_ppp.h>
-#include <linux/if_pppox.h>
 #include <linux/if_pppol2tp.h>
 
 #include "l2tp_event.h"
