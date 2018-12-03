@@ -69,15 +69,15 @@ int rc_avpair_assign (VALUE_PAIR *vp, void *pval, int len)
 			    || (len > AUTH_STRING_LEN)) {
 				error("rc_avpair_assign: bad attribute length");
 				return result;
-		    }
+		        }
 
 			if (len > 0) {
 				memcpy(vp->strvalue, (char *)pval, len);
 				vp->strvalue[len] = '\0';
 				vp->lvalue = len;
 			} else {
-			strncpy (vp->strvalue, (char *) pval, AUTH_STRING_LEN);
-			vp->lvalue = strlen((char *) pval);
+			        strncpy(vp->strvalue, (char *) pval, AUTH_STRING_LEN);
+			        vp->lvalue = strlen((char *) pval);
 			}
 
 			result = 0;
@@ -121,7 +121,7 @@ VALUE_PAIR *rc_avpair_new (int attrid, void *pval, int len, int vendorcode)
 		if ((vp = (VALUE_PAIR *) malloc (sizeof (VALUE_PAIR)))
 							!= (VALUE_PAIR *) NULL)
 		{
-			strncpy (vp->name, pda->name, sizeof (vp->name));
+			strlcpy(vp->name, pda->name, sizeof(vp->name));
 			vp->attribute = attrid;
 			vp->vendorcode = vendorcode;
 			vp->next = (VALUE_PAIR *) NULL;

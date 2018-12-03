@@ -483,6 +483,7 @@ void msgf(const char *fmt, ...)
 	syslog(LOG_INFO, "%s", line);
     if (to_stderr)
 	fprintf(stderr, "%s\n", line);
+    va_end(args);
 }
 
 /*
@@ -499,6 +500,7 @@ void fatal(int code, const char *fmt, ...)
 	syslog(LOG_ERR, "%s", line);
     if (to_stderr)
 	fprintf(stderr, "%s\n", line);
+    va_end(args);
     terminate(code);
 }
 

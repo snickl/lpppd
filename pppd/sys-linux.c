@@ -1885,7 +1885,7 @@ get_if_hwaddr(u_char *addr, char *name)
  * get_first_ethernet - return the name of the first ethernet-style
  * interface on this system.
  */
-char *
+const char *
 get_first_ethernet()
 {
 	return "eth0";
@@ -2146,7 +2146,6 @@ int ppp_available(void)
 		}
 	    }
 
-	    close (s);
 	    if (!ok) {
 		slprintf(route_buffer, sizeof(route_buffer),
 			 "Sorry - PPP driver version %d.%d.%d is out of date\n",
@@ -2156,6 +2155,7 @@ int ppp_available(void)
 	    }
 	}
     }
+    close(s);
     return ok;
 }
 

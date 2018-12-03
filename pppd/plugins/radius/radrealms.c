@@ -65,14 +65,12 @@ lookup_realm(char const *user,
     
     if ((fd = fopen(radrealms_config, "r")) == NULL) {
 	option_error("cannot open %s", radrealms_config);
-	if (auths) 
-		free(auths);
-	if (accts)
-		free(accts);
+	free(auths);
+	free(accts);
 	return;
-    } 
+    }
     info("Reading %s", radrealms_config);
-    
+
     while ((fgets(buffer, sizeof(buffer), fd) != NULL)) {
 	line++;
 
@@ -88,6 +86,8 @@ lookup_realm(char const *user,
 	    fclose(fd);
 	    option_error("%s: invalid line %d: %s", radrealms_config,
 			 line, buffer);
+	    free(auths);
+	    free(accts);
 	    return;
 	}
 	info("Parsing '%s' entry:", p);
@@ -102,6 +102,8 @@ lookup_realm(char const *user,
 	    fclose(fd);
 	    option_error("%s: realm name missing on line %d: %s",
 			 radrealms_config, line, buffer);
+	    free(auths);
+	    free(accts);
 	    return;
 	}
 
@@ -112,6 +114,8 @@ lookup_realm(char const *user,
 		fclose(fd);
 		option_error("%s: server address missing on line %d: %s",
 			     radrealms_config, line, buffer);
+	        free(auths);
+	        free(accts);
 		return;
 	    }
 	    s->name[s->max] = strdup(p);
@@ -120,6 +124,8 @@ lookup_realm(char const *user,
 		fclose(fd);
 		option_error("%s: server port missing on line %d:  %s",
 			     radrealms_config, line, buffer);
+		free(auths);
+		free(accts);
 		return;
 	    }
 	    s->port[s->max] = atoi(p);

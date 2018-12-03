@@ -117,10 +117,9 @@ get_ppp_stats(curp)
     memset (&req, 0, sizeof (req));
 
     req.stats_ptr = (caddr_t) &req.stats;
-#undef ifr_name
-#define ifr_name ifr__name
 
-    strncpy(req.ifr_name, interface, sizeof(req.ifr_name));
+    strncpy(req.ifr__name, interface, sizeof(req.ifr__name));
+    req.ifr__name[sizeof(req.ifr__name) - 1] = 0;
     if (ioctl(s, SIOCGPPPSTATS, &req) < 0) {
 	fprintf(stderr, "%s: ", progname);
 	if (errno == ENOTTY)
@@ -141,10 +140,9 @@ get_ppp_cstats(csp)
     memset (&creq, 0, sizeof (creq));
 
     creq.stats_ptr = (caddr_t) &creq.stats;
-#undef  ifr_name
-#define ifr_name ifr__name
 
-    strncpy(creq.ifr_name, interface, sizeof(creq.ifr_name));
+    strncpy(creq.ifr__name, interface, sizeof(creq.ifr__name));
+    creq.ifr__name[sizeof(creq.ifr__name) - 1] = 0;
     if (ioctl(s, SIOCGPPPCSTATS, &creq) < 0) {
 	fprintf(stderr, "%s: ", progname);
 	if (errno == ENOTTY) {
@@ -417,6 +415,7 @@ main(argc, argv)
 
     {
 	struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
 
 	s = socket(AF_INET, SOCK_DGRAM, 0);
 	if (s < 0) {
@@ -425,9 +424,8 @@ main(argc, argv)
 	    exit(1);
 	}
 
-#undef  ifr_name
-#define ifr_name ifr_ifrn.ifrn_name
 	strncpy(ifr.ifr_name, interface, sizeof(ifr.ifr_name));
+	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = 0;
 	if (ioctl(s, SIOCGIFFLAGS, (caddr_t)&ifr) < 0) {
 	    fprintf(stderr, "%s: nonexistent interface '%s' specified\n",
 		    progname, interface);

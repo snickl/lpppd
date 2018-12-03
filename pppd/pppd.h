@@ -691,7 +691,7 @@ int  set_filters(struct bpf_program *pass, struct bpf_program *active);
 				/* Set filter programs in kernel */
 #endif
 int  get_if_hwaddr(u_char *addr, char *name);
-char *get_first_ethernet(void);
+const char *get_first_ethernet(void);
 
 /* Procedures exported from options.c */
 int setipaddr(char *, char **, int); /* Set local/remote ip addresses */
