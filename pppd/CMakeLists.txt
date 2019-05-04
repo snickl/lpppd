@@ -31,6 +31,11 @@ if (HAVE_PAMAPPL_H)
 	target_link_libraries(pppd -lpam)
 endif()
 
+if (HAVE_SD_DAEMON_H)
+	add_definitions(-DSYSTEMD)
+	target_link_libraries(pppd -lsystemd)
+endif()
+
 if (OPTION_LPPPD_INET6)
 	target_sources(pppd PUBLIC ipv6cp.c eui64.c)
 endif()

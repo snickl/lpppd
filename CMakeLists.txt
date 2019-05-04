@@ -25,6 +25,7 @@ check_function_exists(pwrite HAVE_PWRITE)
 check_include_files(security/pam_appl.h HAVE_PAMAPPL_H)
 check_include_files("sys/types.h;pcap-bpf.h" HAVE_PCAPBPF_H)
 check_include_files(openssl/crypto.h HAVE_CRYPTO_H)
+check_include_files(systemd/sd-daemon.h HAVE_SD_DAEMON_H)
 configure_file(${PROJECT_SOURCE_DIR}/include/config.h.in ${PROJECT_BINARY_DIR}/include/config.h)
 
 if (HAVE_MMAP)

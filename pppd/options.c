@@ -93,6 +93,9 @@ char	devnam[MAXPATHLEN];	/* Device name */
 bool	nodetach = 0;		/* Don't detach from controlling tty */
 bool	updetach = 0;		/* Detach once link is up */
 bool	master_detach;		/* Detach when we're (only) multilink master */
+#ifdef SYSTEMD
+bool	up_sdnotify = 0;	/* Notify systemd once link is up */
+#endif
 int	maxconnect = 0;		/* Maximum connect time */
 char	user[MAXNAMELEN];	/* Username for PAP */
 char	passwd[MAXSECRETLEN];	/* Password for PAP */
@@ -205,6 +208,11 @@ option_t general_options[] = {
       "Don't detach from controlling tty", OPT_PRIO | 1 },
     { "-detach", o_bool, &nodetach,
       "Don't detach from controlling tty", OPT_ALIAS | OPT_PRIOSUB | 1 },
+#ifdef SYSTEMD
+    { "up_sdnotify", o_bool, &up_sdnotify,
+      "Notify systemd once link is up (implies nodetach)",
+      OPT_PRIOSUB | OPT_A2COPY | 1, &nodetach },
+#endif
     { "updetach", o_bool, &updetach,
       "Detach from controlling tty once link is up",
       OPT_PRIOSUB | OPT_A2CLR | 1, &nodetach },
@@ -1735,7 +1743,7 @@ user_unsetenv(argv)
 	option_error("unexpected = in name: %s", arg);
 	return 0;
     }
-    if (arg == '\0') {
+    if (*arg == '\0') {
 	option_error("missing variable name for unset");
 	return 0;
     }

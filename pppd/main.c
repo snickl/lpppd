@@ -247,7 +247,7 @@ static void cleanup_db(void);
 static void handle_events(void);
 void print_link_stats(void);
 
-extern	char	*getlogin(void);
+extern	char *getlogin(void);
 int main(int, char *[]);
 
 #ifdef ultrix
@@ -1731,7 +1731,7 @@ update_script_environment()
 		script_env[i] = newstring;
 	    else
 		add_script_env(i, newstring);
-	} else {
+	} else if (p != NULL) {
 	    remove_script_env(i);
 	}
     }
