@@ -79,9 +79,8 @@ parseForHostUniq(UINT16_t type, UINT16_t len, unsigned char *data,
 {
     PPPoETag *tag = extra;
 
-    if (type == TAG_HOST_UNIQ && len == ntohs(tag->length)) {
+    if (type == TAG_HOST_UNIQ && len == ntohs(tag->length))
 	tag->length = memcmp(data, tag->payload, len);
-    }
 }
 
 /**********************************************************************

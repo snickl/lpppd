@@ -662,7 +662,7 @@ int main(int argc, char *argv[])
     conn->discoveryTimeout = PADI_TIMEOUT;
     conn->discoveryAttempts = MAX_PADI_ATTEMPTS;
 
-    while ((opt = getopt(argc, argv, "I:D:VUQS:C:t:a:h")) > 0) {
+    while ((opt = getopt(argc, argv, "I:D:VUQS:C:W:t:a:h")) > 0) {
 	switch(opt) {
 	case 'S':
 	    conn->serviceName = xstrdup(optarg);
@@ -692,10 +692,12 @@ int main(int argc, char *argv[])
 	    if(conn->hostUniq.length) {
 		fprintf(stderr, "-U and -W are mutually exclusive\n");
 		exit(EXIT_FAILURE);
+	    } else {
+		pid_t pid = getpid();
+		conn->hostUniq.type = htons(TAG_HOST_UNIQ);
+		conn->hostUniq.length = htons(sizeof(pid));
+		memcpy(conn->hostUniq.payload, &pid, sizeof(pid));
 	    }
-            char pidbuf[5];
-            snprintf(pidbuf, sizeof(pidbuf), "%04x", getpid());
-            parseHostUniq(pidbuf, &conn->hostUniq);
 	    break;
 	case 'W':
 	    if(conn->hostUniq.length) {
@@ -703,8 +705,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	    }
 	    if (!parseHostUniq(optarg, &conn->hostUniq)) {
-                fprintf(stderr, "Invalid host-uniq argument: %s\n", optarg);
-                exit(EXIT_FAILURE);
+		fprintf(stderr, "Invalid host-uniq argument: %s\n", optarg);
+		exit(EXIT_FAILURE);
             }
 	    break;
 	case 'D':
@@ -786,6 +788,7 @@ void usage(void)
 	    "   -S name        -- Set desired service name.\n"
 	    "   -C name        -- Set desired access concentrator name.\n"
 	    "   -U             -- Use Host-Unique to allow multiple PPPoE sessions.\n"
+	    "   -W hexvalue    -- Set the Host-Unique to the supplied hex string.\n"
 	    "   -h             -- Print usage information.\n");
     fprintf(stderr, "\nVersion " RP_VERSION "\n");
 }

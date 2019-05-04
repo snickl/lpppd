@@ -22,8 +22,6 @@
 
 #include "pppd/pppd.h"		/* For error */
 
-#include "pppd/pppd.h"		/* For error */
-
 /* How do we access raw Ethernet devices? */
 #undef USE_LINUX_PACKET
 #undef USE_BPF
@@ -279,22 +277,21 @@ void pppoe_log_packet(const char *prefix, PPPoEPacket *packet);
 
 static inline int parseHostUniq(const char *uniq, PPPoETag *tag)
 {
-    int i, len = strlen(uniq);
+    unsigned i, len = strlen(uniq);
 
 #define hex(x) \
     (((x) <= '9') ? ((x) - '0') : \
         (((x) <= 'F') ? ((x) - 'A' + 10) : \
             ((x) - 'a' + 10)))
 
-    if (len % 2)
+    if (!len || len % 2 || len / 2 > sizeof(tag->payload))
         return 0;
 
-    for (i = 0; i < len; i += 2)
-    {
+    for (i = 0; i < len; i += 2) {
         if (!isxdigit(uniq[i]) || !isxdigit(uniq[i+1]))
             return 0;
 
-        tag->payload[i / 2] = (char)(16 * hex(uniq[i]) + hex(uniq[i+1]));
+        tag->payload[i / 2] = (char)(hex(uniq[i]) << 4 | hex(uniq[i+1]));
     }
 
 #undef hex
