@@ -118,8 +118,8 @@ get_ppp_stats(curp)
 
     req.stats_ptr = (caddr_t) &req.stats;
 
-    strncpy(req.ifr__name, interface, sizeof(req.ifr__name));
-    req.ifr__name[sizeof(req.ifr__name) - 1] = 0;
+    strncpy(req.ifr__name, interface, IFNAMSIZ);
+    req.ifr__name[IFNAMSIZ - 1] = 0;
     if (ioctl(s, SIOCGPPPSTATS, &req) < 0) {
 	fprintf(stderr, "%s: ", progname);
 	if (errno == ENOTTY)
@@ -141,8 +141,8 @@ get_ppp_cstats(csp)
 
     creq.stats_ptr = (caddr_t) &creq.stats;
 
-    strncpy(creq.ifr__name, interface, sizeof(creq.ifr__name));
-    creq.ifr__name[sizeof(creq.ifr__name) - 1] = 0;
+    strncpy(creq.ifr__name, interface, IFNAMSIZ);
+    creq.ifr__name[IFNAMSIZ - 1] = 0;
     if (ioctl(s, SIOCGPPPCSTATS, &creq) < 0) {
 	fprintf(stderr, "%s: ", progname);
 	if (errno == ENOTTY) {
@@ -424,8 +424,8 @@ main(argc, argv)
 	    exit(1);
 	}
 
-	strncpy(ifr.ifr_name, interface, sizeof(ifr.ifr_name));
-	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = 0;
+	strncpy(ifr.ifr_name, interface, IFNAMSIZ);
+	ifr.ifr_name[IFNAMSIZ - 1] = 0;
 	if (ioctl(s, SIOCGIFFLAGS, (caddr_t)&ifr) < 0) {
 	    fprintf(stderr, "%s: nonexistent interface '%s' specified\n",
 		    progname, interface);

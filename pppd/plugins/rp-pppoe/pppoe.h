@@ -26,6 +26,8 @@
 
 #include "pppd/pppd.h"		/* For error */
 
+#include "pppd/pppd.h"		/* For error */
+
 /* How do we access raw Ethernet devices? */
 #undef USE_LINUX_PACKET
 #undef USE_BPF

@@ -126,7 +126,7 @@ openInterface(char const *ifname, UINT16_t type, unsigned char *hwaddr)
 
     /* Fill in hardware address */
     if (hwaddr) {
-	strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+	strlcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 	if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
 	    error("Can't get hardware address for %s: %m", ifname);
 	    close(fd);
@@ -145,7 +145,7 @@ openInterface(char const *ifname, UINT16_t type, unsigned char *hwaddr)
     }
 
     /* Sanity check on MTU */
-    strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+    strlcpy(ifr.ifr_name, ifname, IFNAMSIZ);
     if (ioctl(fd, SIOCGIFMTU, &ifr) < 0) {
 	error("Can't get MTU for %s: %m", ifname);
     } else if (ifr.ifr_mtu < ETH_DATA_LEN) {
@@ -159,7 +159,7 @@ openInterface(char const *ifname, UINT16_t type, unsigned char *hwaddr)
     sa.sll_family = AF_PACKET;
     sa.sll_protocol = htons(type);
 
-    strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
+    strlcpy(ifr.ifr_name, ifname, IFNAMSIZ);
     if (ioctl(fd, SIOCGIFINDEX, &ifr) < 0) {
 	error("Could not get interface index for %s: %m", ifname);
 	close(fd);
