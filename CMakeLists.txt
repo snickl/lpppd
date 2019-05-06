@@ -12,6 +12,7 @@ set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} -s")
 option(OPTION_LPPPD_INET6 "Support for IPv6" ON)
 option(OPTION_LPPPD_PPPD_FILTER "Support for PPP packet filtering" OFF)
 option(OPTION_LPPPD_PPPD_MULTILINK "Enable multilink PPP" OFF)
+option(OPTION_DEBUG "Enable verbose debugging" OFF)
 
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
@@ -44,6 +45,10 @@ endif()
 
 if (OPTION_LPPPD_INET6)
 	add_definitions(-DINET6)
+endif()
+
+if (OPTION_DEBUG)
+	add_definitions(-DDEBUGALL)
 endif()
 
 include_directories(include)
