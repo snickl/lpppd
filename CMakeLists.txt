@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1.0)
-
+if(POLICY CMP0076)
+    cmake_policy(SET CMP0076 NEW)
+endif()
 project(lpppd C)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
