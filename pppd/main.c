@@ -709,12 +709,16 @@ void
 set_ifunit(iskey)
     int iskey;
 {
+    char ifkey[32];
+
     if (req_ifname[0] != '\0')
 	slprintf(ifname, sizeof(ifname), "%s", req_ifname);
     else
 	slprintf(ifname, sizeof(ifname), "%s%d", PPP_DRV_NAME, ifunit);
     info("Using interface %s", ifname);
     script_setenv("IFNAME", ifname, iskey);
+    slprintf(ifkey, sizeof(ifkey), "%d", ifunit);
+    script_setenv("UNIT", ifkey, iskey);
     if (iskey) {
 	create_pidfile(getpid());	/* write pid to file */
 	create_linkpidfile(getpid());
@@ -1546,7 +1550,8 @@ safe_fork(int infd, int outfd, int errfd)
 	/* Executing in the child */
 	sys_close();
 #ifdef USE_TDB
-	tdb_close(pppdb);
+	if (pppdb != NULL)
+		tdb_close(pppdb);
 #endif
 
 	/* make sure infd, outfd and errfd won't get tromped on below */

@@ -674,6 +674,12 @@ int  sifdefaultroute(int, u_int32_t, u_int32_t);
 				/* Create default route through i/f */
 int  cifdefaultroute(int, u_int32_t, u_int32_t);
 				/* Delete default route through i/f */
+#ifdef INET6
+int  sif6defaultroute __P((int, eui64_t, eui64_t));
+				/* Create default IPv6 route through i/f */
+int  cif6defaultroute __P((int, eui64_t, eui64_t));
+				/* Delete default IPv6 route through i/f */
+#endif
 int  sifproxyarp(int, u_int32_t);
 				/* Add proxy ARP entry for peer */
 int  cifproxyarp(int, u_int32_t);
