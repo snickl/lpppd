@@ -214,6 +214,7 @@ struct notifier {
  * Global variables.
  */
 
+extern int	got_sigterm;	/* SIGINT or SIGTERM was received */
 extern int	hungup;		/* Physical layer has disconnected */
 extern int	ifunit;		/* Interface unit number */
 extern char	ifname[];	/* Interface name */
@@ -700,6 +701,8 @@ int  set_filters(struct bpf_program *pass, struct bpf_program *active);
 #endif
 int  get_if_hwaddr(u_char *addr, char *name);
 const char *get_first_ethernet(void);
+int get_time(struct timeval *);
+				/* Get current time, monotonic if possible. */
 
 /* Procedures exported from options.c */
 int setipaddr(char *, char **, int); /* Set local/remote ip addresses */

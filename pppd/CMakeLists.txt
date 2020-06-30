@@ -4,6 +4,11 @@ add_executable(pppd auth.c ccp.c chap-md5.c chap-new.c demand.c eap.c ecp.c
 
 add_definitions(-DMAXOCTETS)
 
+find_library(LIBRT rt)
+if(LIBRT)
+	target_link_libraries(pppd ${LIBRT})
+endif()
+
 if (NOT HAVE_CRYPT_H)
 	message(FATAL_ERROR "Need crypt()")
 else()
