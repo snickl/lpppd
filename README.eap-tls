@@ -7,7 +7,7 @@ EAP-TLS authentication support for PPP
     security protocol that can be used with PPP.  It provides a means
     to plug in multiple optional authentication methods.
 
-    Transport Level Security (TLS; RFC 2246) provides for mutual
+    Transport Level Security (TLS; RFC 5216) provides for mutual
     authentication, integrity-protected ciphersuite negotiation and
     key exchange between two endpoints.  It also provides for optional
     MPPE encryption.
@@ -126,6 +126,8 @@ EAP-TLS authentication support for PPP
 
       ca <ca-file>
         Use the CA public certificate found in <ca-file> in PEM format
+      ca-path <directory>
+        Use the directory <directory> as the CA public certificate directory
       cert <cert-file>
         Use the client public certificate found in <cert-file> in PEM format
         or in engine:engine_id format
@@ -142,6 +144,9 @@ EAP-TLS authentication support for PPP
       need-peer-eap
         If the peer doesn't ask us to authenticate or doesn't use eap
         to authenticate us, disconnect.
+      max-tls-version <1.0|1.1|1.2 (default)|1.3>
+        Specify the maximum TLS protocol version to negotiate with peers. Defaults
+        to TLSv1.2 as the TLSv1.3 code is experimental.
 
     Note:
       password-encrypted certificates can be used as of v0.94 of this
@@ -221,59 +226,3 @@ EAP-TLS authentication support for PPP
 
     This is experimental code.
     Send suggestions and comments to Jan Just Keijser <janjust@nikhef.nl>
-
-8. Changelog of ppp-<>-eaptls-mppe-* patches
-
-v0.7     (22-Nov-2005)
- - First version of the patch to include MPPE support
- - ppp-2.4.3 only
-v0.9     (25-Jul-2006)
- - Bug fixes
- - First version for ppp-2.4.4
-v0.91    (03-Sep-2006)
- - Added missing #include for md5.h
- - Last version for ppp-2.4.3
-v0.92    (22-Apr-2008)
- - Fix for openssl 0.9.8 issue with md5 function overload.
-v0.93    (14-Aug-2008)
- - Make sure 'noauth' option can be used to bypass server certificate verification.
-v0.94    (15-Oct-2008)
- - Added support for password-protected private keys by (ab)using the 'password' field.
-v0.95    (23-Dec-2009)
- - First version with OpenSSL engine support.
-v0.96    (27-Jan-2010)
- - Added fully functional support for OpenSSL engines (PKCS#11)
- - First version for ppp-2.4.5
-v0.97    (20-Apr-2010)
- - Some bug fixes for v0.96
- - Added support for entering the password via a plugin. The sample plugin
-     .../pppd/plugins/passprompt.c has been extended with EAP-TLS support.
-   The "old" methods using the password option or the /etc/ppp/openssl.cnf file still work.
- - Added support for specifying the client CA, certificate and private key on the command-line
-   or via the ppp config file.
-v0.98    (20-Apr-2010)
- - Fix initialisation bug when using ca/cert/key command-line options.
- - Last version for ppp-2.4.4
-v0.99    (05-Oct-2010)
- - Fix coredump when using multilink option.
-v0.991   (08-Aug-2011)
- - Fix compilation issue with openssl 1.0.
-v0.992   (01-Dec-2011)
- - Fix compilation issue with eaptls_check_hook and passwordfd plugin.
-v0.993   (24-Apr-2012)
- - Fix compilation issue when EAP_TLS=n in pppd/Makefile.
-v0.994   (11-Jun-2012)
- - Fix compilation issue on Ubuntu 11.10.
-v0.995   (27-May-2014)
- - Add support for a CRL file using the command-line option 'crl'
-   (prior only 'crl-dir' was supported).
- - Fix segfault when pkcs11 enginename was not specified correctly.
- - Fix segfault when client was misconfigured.
- - Disable SSL Session Ticket support as Windows 8 does not support this.
-v0.996   (28-May-2014)
- - Fix minor bug where SessionTicket message was printed as 'Unknown SSL3 code 4'
- - Add EAP-TLS-specific options to pppd.8 manual page.
- - Updated README.eap-tls file with new option and provide an example.
-v0.997   (19-Jun-2014)
- - change SSL_OP_NO_TICKETS to SSL_OP_NO_TICKET
- - fix bug in initialisation code with fragmented packets.

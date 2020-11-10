@@ -77,6 +77,7 @@
 #include <crypt.h>
 #include <grp.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -114,6 +115,9 @@
 #include "eap.h"
 #ifdef USE_EAPTLS
 #include "eap-tls.h"
+#endif
+#ifdef CBCP_SUPPORT
+#include "cbcp.h"
 #endif
 #include "pathnames.h"
 #include "session.h"
@@ -241,10 +245,12 @@ bool explicit_passwd = 0;	/* Set if "password" option supplied */
 char remote_name[MAXNAMELEN];	/* Peer's name for authentication */
 #ifdef USE_EAPTLS
 char *cacert_file  = NULL;	/* CA certificate file (pem format) */
+char *ca_path      = NULL;	/* directory with CA certificates */
 char *cert_file    = NULL;	/* client certificate file (pem format) */
 char *privkey_file = NULL;	/* client private key file (pem format) */
 char *crl_dir      = NULL;	/* directory containing CRL files */
 char *crl_file     = NULL;	/* Certificate Revocation List (CRL) file (pem format) */
+char *max_tls_version = NULL;	/* Maximum TLS protocol version (default=1.2) */
 bool need_peer_eap = 0;			/* Require peer to authenticate us */
 #endif
 
@@ -252,41 +258,43 @@ static char *uafname;		/* name of most recent +ua file */
 
 /* Prototypes for procedures local to this file. */
 
-static void network_phase(int);
-static void check_idle(void *);
-static void connect_time_expired(void *);
-static int  null_login(int);
-static int  get_pap_passwd(char *);
-static int  have_pap_secret(int *);
-static int  have_chap_secret(char *, char *, int, int *);
-static int  have_srp_secret(char *client, char *server, int need_ip,
-                            int *lacks_ipp);
+static void network_phase (int);
+static void check_idle (void *);
+static void connect_time_expired (void *);
+static int  null_login (int);
+static int  get_pap_passwd (char *);
+static int  have_pap_secret (int *);
+static int  have_chap_secret (char *, char *, int, int *);
+static int  have_srp_secret (char *client, char *server, int need_ip,
+    int *lacks_ipp);
+
 #ifdef USE_EAPTLS
-static int  have_eaptls_secret_server(char *client, char *server,
-		                      int need_ip, int *lacks_ipp);
-static int  have_eaptls_secret_client(char *client, char *server);
-static int  scan_authfile_eaptls(FILE * f, char *client, char *server,
-			         char *cli_cert, char *serv_cert,
-			         char *ca_cert, char *pk,
-			         struct wordlist ** addrs,
-			         struct wordlist ** opts,
-			         char *filename, int flags);
+static int  have_eaptls_secret_server
+(char *client, char *server, int need_ip, int *lacks_ipp);
+static int  have_eaptls_secret_client (char *client, char *server);
+static int  scan_authfile_eaptls (FILE * f, char *client, char *server,
+			       char *cli_cert, char *serv_cert,
+			       char *ca_cert, char *pk,
+			       struct wordlist ** addrs,
+			       struct wordlist ** opts,
+			       char *filename, int flags);
 #endif
-static int  ip_addr_check(u_int32_t, struct permitted_ip *);
-static int  scan_authfile(FILE *, char *, char *, char *,
-			  struct wordlist **, struct wordlist **,
-			  char *, int);
-static void free_wordlist(struct wordlist *);
-static void auth_script(char *);
-static void auth_script_done(void *);
-static void set_allowed_addrs(int, struct wordlist *, struct wordlist *);
-static int  some_ip_ok(struct wordlist *);
-static int  setupapfile(char **);
-static int  privgroup(char **);
-static int  set_noauth_addr(char **);
-static int  set_permitted_number(char **);
-static void check_access(FILE *, char *);
-static int  wordlist_count(struct wordlist *);
+
+static int  ip_addr_check (u_int32_t, struct permitted_ip *);
+static int  scan_authfile (FILE *, char *, char *, char *,
+			       struct wordlist **, struct wordlist **,
+			       char *, int);
+static void free_wordlist (struct wordlist *);
+static void auth_script (char *);
+static void auth_script_done (void *);
+static void set_allowed_addrs (int, struct wordlist *, struct wordlist *);
+static int  some_ip_ok (struct wordlist *);
+static int  setupapfile (char **);
+static int  privgroup (char **);
+static int  set_noauth_addr (char **);
+static int  set_permitted_number (char **);
+static void check_access (FILE *, char *);
+static int  wordlist_count (struct wordlist *);
 
 #ifdef MAXOCTETS
 static void check_maxoctets(void *);
@@ -385,10 +393,13 @@ option_t auth_options[] = {
 
 #ifdef USE_EAPTLS
     { "ca", o_string, &cacert_file,   "EAP-TLS CA certificate in PEM format" },
+    { "capath", o_string, &ca_path,   "EAP-TLS CA certificate directory" },
     { "cert", o_string, &cert_file,   "EAP-TLS client certificate in PEM format" },
     { "key", o_string, &privkey_file, "EAP-TLS client private key in PEM format" },
     { "crl-dir", o_string, &crl_dir,  "Use CRLs in directory" },
     { "crl", o_string, &crl_file,     "Use specific CRL file" },
+    { "max-tls-version", o_string, &max_tls_version,
+      "Maximum TLS version (1.0/1.1/1.2 (default)/1.3)" },
     { "need-peer-eap", o_bool, &need_peer_eap,
       "Require the peer to authenticate us", 1 },
 #endif /* USE_EAPTLS */
@@ -2447,7 +2458,7 @@ have_eaptls_secret_client(client, server)
     else if (server != NULL && server[0] == 0)
 		server = NULL;
 
-	if (cacert_file && cert_file && privkey_file)
+	if ((cacert_file || ca_path) && cert_file && privkey_file)
 		return 1;
 
     filename = _PATH_EAPTLSCLIFILE;
@@ -2639,13 +2650,14 @@ scan_authfile_eaptls(f, client, server, cli_cert, serv_cert, ca_cert, pk,
 
 int
 get_eaptls_secret(unit, client, server, clicertfile, servcertfile,
-		  cacertfile, pkfile, am_server)
+		  cacertfile, capath, pkfile, am_server)
     int unit;
     char *client;
     char *server;
     char *clicertfile;
     char *servcertfile;
     char *cacertfile;
+    char *capath;
     char *pkfile;
     int am_server;
 {
@@ -2655,13 +2667,22 @@ get_eaptls_secret(unit, client, server, clicertfile, servcertfile,
     struct wordlist *addrs = NULL;
     struct wordlist *opts  = NULL;
 
-	/* in client mode the ca+cert+privkey can also be specified as options */
-	if (!am_server && cacert_file && cert_file && privkey_file )
+	/* maybe overkill, but it eases debugging */
+	bzero(clicertfile, MAXWORDLEN);
+	bzero(servcertfile, MAXWORDLEN);
+	bzero(cacertfile, MAXWORDLEN);
+	bzero(capath, MAXWORDLEN);
+	bzero(pkfile, MAXWORDLEN);
+
+	/* the ca+cert+privkey can also be specified as options */
+	if (!am_server && (cacert_file || ca_path) && cert_file && privkey_file )
 	{
 		strlcpy( clicertfile, cert_file, MAXWORDLEN );
-		strlcpy( cacertfile, cacert_file, MAXWORDLEN );
+		if (cacert_file)
+			strlcpy( cacertfile, cacert_file, MAXWORDLEN );
+		if (ca_path)
+			strlcpy( capath, ca_path, MAXWORDLEN );
 		strlcpy( pkfile, privkey_file, MAXWORDLEN );
-		servcertfile[0] = '\0';
 	}
 	else
 	{

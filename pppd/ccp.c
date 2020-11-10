@@ -463,7 +463,6 @@ ccp_resetci(f)
     *go = ccp_wantoptions[f->unit];
     all_rejected[f->unit] = 0;
 
-
     /*
      * Check whether the kernel knows about the various
      * compression methods we might request.
@@ -1271,4 +1270,3 @@ ccp_rack_timeout(arg)
     } else
 	ccp_localstate[f->unit] &= ~RACK_PENDING;
 }
-

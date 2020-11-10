@@ -336,13 +336,14 @@ extern int	child_wait;	/* # seconds to wait for children at end */
 #ifdef USE_EAPTLS
 extern char	*crl_dir;
 extern char	*crl_file;
+extern char *max_tls_version;
 #endif /* USE_EAPTLS */
 
 #ifdef MAXOCTETS
 extern unsigned int maxoctets;	     /* Maximum octetes per session (in bytes) */
 extern int       maxoctets_dir;      /* Direction :
 				      0 - in+out (default)
-				      1 - in 
+				      1 - in
 				      2 - out
 				      3 - max(in,out) */
 extern int       maxoctets_timeout;  /* Timeout for check of octets limit */
@@ -351,7 +352,7 @@ extern int       maxoctets_timeout;  /* Timeout for check of octets limit */
 #define PPP_OCTETS_DIRECTION_OUT        2
 #define PPP_OCTETS_DIRECTION_MAXOVERAL  3
 /* same as previos, but little different on RADIUS side */
-#define PPP_OCTETS_DIRECTION_MAXSESSION 4	
+#define PPP_OCTETS_DIRECTION_MAXSESSION 4
 #endif
 
 #ifdef PPP_FILTER
@@ -678,9 +679,9 @@ int  sifdefaultroute(int, u_int32_t, u_int32_t);
 int  cifdefaultroute(int, u_int32_t, u_int32_t);
 				/* Delete default route through i/f */
 #ifdef INET6
-int  sif6defaultroute __P((int, eui64_t, eui64_t));
+int  sif6defaultroute (int, eui64_t, eui64_t);
 				/* Create default IPv6 route through i/f */
-int  cif6defaultroute __P((int, eui64_t, eui64_t));
+int  cif6defaultroute (int, eui64_t, eui64_t);
 				/* Delete default IPv6 route through i/f */
 #endif
 int  sifproxyarp(int, u_int32_t);
@@ -755,6 +756,10 @@ extern void (*multilink_join_hook)(void);
 
 #ifdef USE_EAPTLS
 extern int (*eaptls_passwd_hook)(char *user, char *passwd);
+#endif
+
+#ifdef USE_EAPTLS
+extern int (*eaptls_passwd_hook) (char *user, char *passwd);
 #endif
 
 /* Let a plugin snoop sent and received packets.  Useful for L2TP */
