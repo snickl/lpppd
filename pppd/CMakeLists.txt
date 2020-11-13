@@ -1,5 +1,5 @@
 add_executable(pppd auth.c ccp.c chap-md5.c chap-new.c demand.c eap.c ecp.c
-		    fsm.c ipcp.c lcp.c magic.c main.c md5.c options.c session.c
+		    fsm.c ipcp.c lcp.c magic.c main.c options.c session.c
                     sys-linux.c tty.c upap.c utils.c)
 
 add_definitions(-DMAXOCTETS)
@@ -56,6 +56,14 @@ endif()
 if (OPTION_LPPPD_PPPD_MULTILINK)
 	add_definitions(-DHAVE_MULTILINK -DUSE_TDB)
 	target_sources(pppd PUBLIC multilink.c tdb.c spinlock.c)
+endif()
+
+if (OPTION_LPPPD_PPPD_EAPTLS AND HAVE_LIBCRYPTO)
+	add_definitions(-DUSE_EAPTLS)
+	target_sources(pppd PUBLIC eap-tls.c)
+	target_link_libraries(pppd -lssl -lcrypto)
+else()
+	target_sources(pppd PUBLIC md5.c)
 endif()
 
 if (OPTION_LPPPD_PPPD_SRP)

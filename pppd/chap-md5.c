@@ -36,6 +36,7 @@
 #include "magic.h"
 #ifdef USE_EAPTLS
 #include "eap-tls.h"
+#include <openssl/md5.h>
 #else
 #include "md5.h"
 #endif /* USE_EAPTLS */
