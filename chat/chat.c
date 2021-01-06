@@ -81,7 +81,7 @@
  *		(614)451-1883
  *
  */
-#include <stdarg.h>
+
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
@@ -94,6 +94,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#include <stdarg.h>
 
 #ifndef TERMIO
 #undef	TERMIOS
@@ -187,43 +188,41 @@ int clear_report_next = 0;
 
 int say_next = 0, hup_next = 0;
 
-void *dup_mem(void *b, size_t c);
-void *copy_of(char *s);
-char *grow(char *s, char **p, size_t len);
-void usage(void);
-void msgf(const char *fmt, ...);
-void fatal(int code, const char *fmt, ...);
-SIGTYPE sigalrm(int signo);
-SIGTYPE sigint(int signo);
-SIGTYPE sigterm(int signo);
-SIGTYPE sighup(int signo);
-void unalarm(void);
-void init(void);
-void set_tty_parameters(void);
-void echo_stderr(int);
-void break_sequence(void);
-void terminate(int status);
-void do_file(char *chat_file);
-int  get_string(register char *string);
-int  put_string(register char *s);
-int  write_char(int c);
-int  put_char(int c);
-int  get_char(void);
-void chat_send(register char *s);
-char *character(int c);
-void chat_expect(register char *s);
-char *clean(register char *s, int sending);
-void break_sequence(void);
-void terminate(int status);
-void pack_array(char **array, int end);
-char *expect_strtok(char *, char *);
-int vfmtmsg(char *, int, const char *, va_list);	/* vsprintf++ */
+void *dup_mem (void *b, size_t c);
+void *copy_of (char *s);
+char *grow (char *s, char **p, size_t len);
+void usage (void);
+void msgf (const char *fmt, ...);
+void fatal (int code, const char *fmt, ...);
+SIGTYPE sigalrm (int signo);
+SIGTYPE sigint (int signo);
+SIGTYPE sigterm (int signo);
+SIGTYPE sighup (int signo);
+void unalarm (void);
+void init (void);
+void set_tty_parameters (void);
+void echo_stderr (int);
+void break_sequence (void);
+void terminate (int status);
+void do_file (char *chat_file);
+int  get_string (register char *string);
+int  put_string (register char *s);
+int  write_char (int c);
+int  put_char (int c);
+int  get_char (void);
+void chat_send (register char *s);
+char *character (int c);
+void chat_expect (register char *s);
+char *clean (register char *s, int sending);
+void break_sequence (void);
+void terminate (int status);
+void pack_array (char **array, int end);
+char *expect_strtok (char *, char *);
+int vfmtmsg (char *, int, const char *, va_list);	/* vsprintf++ */
 
-int main(int, char *[]);
+int main (int, char *[]);
 
-void *dup_mem(b, c)
-void *b;
-size_t c;
+void *dup_mem(void *b, size_t c)
 {
     void *ans = malloc (c);
     if (!ans)
@@ -233,17 +232,13 @@ size_t c;
     return ans;
 }
 
-void *copy_of (s)
-char *s;
+void *copy_of (char *s)
 {
     return dup_mem (s, strlen (s) + 1);
 }
 
 /* grow a char buffer and keep a pointer offset */
-char *grow(s, p, len)
-char *s;
-char **p;
-size_t len;
+char *grow(char *s, char **p, size_t len)
 {
     size_t l = *p - s;		/* save p as distance into s */
 
@@ -262,9 +257,7 @@ size_t len;
  *	Perform a UUCP-dialer-like chat script on stdin and stdout.
  */
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     int option;
     char *arg;
@@ -391,8 +384,7 @@ main(argc, argv)
  *  Process a chat script when read from a file.
  */
 
-void do_file (chat_file)
-char *chat_file;
+void do_file (char *chat_file)
 {
     int linect, sendflg;
     char *sp, *arg, quote;
@@ -460,7 +452,7 @@ char *chat_file;
 /*
  *	We got an error parsing the command line.
  */
-void usage()
+void usage(void)
 {
     fprintf(stderr, "\
 Usage: %s [-e] [-E] [-v] [-V] [-t timeout] [-r report-file]\n\
@@ -478,6 +470,7 @@ void msgf(const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
+
     vfmtmsg(line, sizeof(line), fmt, args);
     if (to_log)
 	syslog(LOG_INFO, "%s", line);
@@ -495,6 +488,7 @@ void fatal(int code, const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
+
     vfmtmsg(line, sizeof(line), fmt, args);
     if (to_log)
 	syslog(LOG_ERR, "%s", line);
@@ -506,8 +500,7 @@ void fatal(int code, const char *fmt, ...)
 
 int alarmed = 0;
 
-SIGTYPE sigalrm(signo)
-int signo;
+SIGTYPE sigalrm(int signo)
 {
     int flags;
 
@@ -525,7 +518,7 @@ int signo;
 	msgf("alarm");
 }
 
-void unalarm()
+void unalarm(void)
 {
     int flags;
 
@@ -536,25 +529,22 @@ void unalarm()
 	fatal(2, "Can't set file mode flags on stdin: %m");
 }
 
-SIGTYPE sigint(signo)
-int signo;
+SIGTYPE sigint(int signo)
 {
     fatal(2, "SIGINT");
 }
 
-SIGTYPE sigterm(signo)
-int signo;
+SIGTYPE sigterm(int signo)
 {
     fatal(2, "SIGTERM");
 }
 
-SIGTYPE sighup(signo)
-int signo;
+SIGTYPE sighup(int signo)
 {
     fatal(2, "SIGHUP");
 }
 
-void init()
+void init(void)
 {
     signal(SIGINT, sigint);
     signal(SIGTERM, sigterm);
@@ -566,7 +556,7 @@ void init()
     alarmed = 0;
 }
 
-void set_tty_parameters()
+void set_tty_parameters(void)
 {
 #if defined(get_term_param)
     term_parms t;
@@ -590,15 +580,14 @@ void set_tty_parameters()
 #endif
 }
 
-void break_sequence()
+void break_sequence(void)
 {
 #ifdef TERMIOS
     tcsendbreak (0, 0);
 #endif
 }
 
-void terminate(status)
-int status;
+void terminate(int status)
 {
     static int terminating = 0;
 
@@ -645,9 +634,8 @@ int status;
 /*
  *	'Clean up' this string.
  */
-char *clean(s, sending)
-register char *s;
-int sending;  /* set to 1 when sending (putting) this string. */
+char *clean(register char *s,
+	    int sending)  /* set to 1 when sending (putting) this string. */
 {
     char cur_chr;
     char *s1, *p, *phchar;
@@ -832,8 +820,7 @@ int sending;  /* set to 1 when sending (putting) this string. */
  * A modified version of 'strtok'. This version skips \ sequences.
  */
 
-char *expect_strtok (s, term)
-     char *s, *term;
+char *expect_strtok (char *s, char *term)
 {
     static  char *str   = "";
     int	    escape_flag = 0;
@@ -887,8 +874,7 @@ char *expect_strtok (s, term)
  * Process the expect string
  */
 
-void chat_expect (s)
-char *s;
+void chat_expect (char *s)
 {
     char *expect;
     char *reply;
@@ -976,8 +962,7 @@ char *s;
  * the data.
  */
 
-char *character(c)
-int c;
+char *character(int c)
 {
     static char string[10];
     char *meta;
@@ -998,8 +983,7 @@ int c;
 /*
  *  process the reply string
  */
-void chat_send (s)
-register char *s;
+void chat_send (register char *s)
 {
     char file_data[STR_LEN];
 
@@ -1189,7 +1173,7 @@ register char *s;
 	fatal(1, "Failed");
 }
 
-int get_char()
+int get_char(void)
 {
     int status;
     char c;
@@ -1214,8 +1198,7 @@ int get_char()
     }
 }
 
-int put_char(c)
-int c;
+int put_char(int c)
 {
     int status;
     char ch = c;
@@ -1242,8 +1225,7 @@ int c;
     }
 }
 
-int write_char (c)
-int c;
+int write_char(int c)
 {
     if (alarmed || put_char(c) < 0) {
 	alarm(0);
@@ -1260,8 +1242,7 @@ int c;
     return (1);
 }
 
-int put_string (s)
-register char *s;
+int put_string(register char *s)
 {
     quiet = 0;
     s = clean(s, 1);
@@ -1315,8 +1296,7 @@ register char *s;
  *	When called with -1, a '\n' character is generated when
  *	the cursor is not at the beginning of a line.
  */
-void echo_stderr(n)
-int n;
+void echo_stderr(int n)
 {
     static int need_lf;
     char *s;
@@ -1343,8 +1323,7 @@ int n;
 /*
  *	'Wait for' this string to appear on this file descriptor.
  */
-int get_string(string)
-register char *string;
+int get_string(register char *string)
 {
     char temp[STR_LEN];
     int c, printed = 0, len, minlen;
@@ -1491,10 +1470,9 @@ register char *string;
     return (0);
 }
 
-void
-pack_array (array, end)
-    char **array; /* The address of the array of string pointers */
-    int    end;   /* The index of the next free entry before CLR_ */
+void pack_array (
+    char **array, /* The address of the array of string pointers */
+    int end)      /* The index of the next free entry before CLR_ */
 {
     int i, j;
 
@@ -1520,11 +1498,7 @@ pack_array (array, end)
 #define OUTCHAR(c)	(buflen > 0? (--buflen, *buf++ = (c)): 0)
 
 int
-vfmtmsg(buf, buflen, fmt, args)
-    char *buf;
-    int buflen;
-    const char *fmt;
-    va_list args;
+vfmtmsg(char *buf, int buflen, const char *fmt, va_list args)
 {
     int c, i, n;
     int width, prec, fillch;

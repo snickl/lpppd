@@ -32,7 +32,6 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: eui64.c,v 1.6 2002/12/04 23:03:32 paulus Exp $
  */
 
 #include "pppd.h"
@@ -41,8 +40,7 @@
  * eui64_ntoa - Make an ascii representation of an interface identifier
  */
 char *
-eui64_ntoa(e)
-    eui64_t e;
+eui64_ntoa(eui64_t e)
 {
     static char buf[32];
 

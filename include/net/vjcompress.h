@@ -132,13 +132,13 @@ struct vjcompress {
 
 extern void  vj_compress_init(struct vjcompress *comp, int max_state);
 extern u_int vj_compress_tcp(struct ip *ip, u_int mlen,
-			     struct vjcompress *comp, int compress_cid_flag,
-			     u_char **vjhdrp);
+				struct vjcompress *comp, int compress_cid_flag,
+				u_char **vjhdrp);
 extern void  vj_uncompress_err(struct vjcompress *comp);
 extern int   vj_uncompress_uncomp(u_char *buf, int buflen,
-				  struct vjcompress *comp);
+				struct vjcompress *comp);
 extern int   vj_uncompress_tcp(u_char *buf, int buflen, int total_len,
-			       struct vjcompress *comp, u_char **hdrp,
-			       u_int *hlenp);
+				struct vjcompress *comp, u_char **hdrp,
+				u_int *hlenp);
 
 #endif /* _VJCOMPRESS_H_ */

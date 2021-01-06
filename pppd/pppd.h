@@ -49,10 +49,10 @@
 #ifndef __PPPD_H__
 #define __PPPD_H__
 
-#include <stdarg.h>
 #include <stdio.h>		/* for FILE */
 #include <stdlib.h>		/* for encrypt */
 #include <unistd.h>		/* for setkey */
+#include <stdarg.h>
 #include <limits.h>		/* for NGROUPS_MAX */
 #include <sys/param.h>		/* for MAXPATHLEN and BSD4_4, if defined */
 #include <sys/types.h>		/* for u_int32_t, if defined */
@@ -325,6 +325,8 @@ extern bool	tune_kernel;	/* May alter kernel settings as necessary */
 extern int	connect_delay;	/* Time to delay after connect script */
 extern int	max_data_rate;	/* max bytes/sec through charshunt */
 extern int	req_unit;	/* interface unit number to use */
+extern char	path_ipup[MAXPATHLEN]; /* pathname of ip-up script */
+extern char	path_ipdown[MAXPATHLEN]; /* pathname of ip-down script */
 extern char	req_ifname[MAXIFNAMELEN]; /* interface name to use */
 extern bool	multilink;	/* enable multilink operation */
 extern bool	noendpoint;	/* don't send or accept endpt. discrim. */
@@ -420,8 +422,7 @@ struct protent {
     /* Close the protocol */
     void (*close)(int unit, char *reason);
     /* Print a packet in readable form */
-    int  (*printpkt)(u_char *pkt, int len, printer_func printer,
-		     void *arg);
+    int  (*printpkt)(u_char *pkt, int len, printer_func printer, void *arg);
     /* Process a received data packet */
     void (*datainput)(int unit, u_char *pkt, int len);
     bool enabled_flag;		/* 0 iff protocol is disabled */
@@ -502,7 +503,7 @@ void timeout(void (*func)(void *), void *arg, int s, int us);
 				/* Call func(arg) after s.us seconds */
 void untimeout(void (*func)(void *), void *arg);
 				/* Cancel call to func(arg) */
-void record_child(int, char *, void (*)(void *), void *, int);
+void record_child(int, char *, void (*) (void *), void *, int);
 pid_t safe_fork(int, int, int);	/* Fork & close stuff in child */
 int  device_script(char *cmd, int in, int out, int dont_wait);
 				/* Run `cmd' with given stdin and stdout */
@@ -580,7 +581,7 @@ int  check_passwd(int, char *, int, char *, int, char **);
 int  get_secret(int, char *, char *, char *, int *, int);
 				/* get "secret" for chap */
 int  get_srp_secret(int unit, char *client, char *server, char *secret,
-                    int am_server);
+    int am_server);
 int  auth_ip_addr(int, u_int32_t);
 				/* check if IP address is authorized */
 int  auth_number(void);	/* check if remote number is authorized */
@@ -666,7 +667,6 @@ int  sifaddr(int, u_int32_t, u_int32_t, u_int32_t);
 int  cifaddr(int, u_int32_t, u_int32_t);
 				/* Reset i/f IP addresses */
 #ifdef INET6
-int  ether_to_eui64(eui64_t *p_eui64);	/* convert eth0 hw address to EUI64 */
 int  sif6up(int);		/* Configure i/f up for IPv6 */
 int  sif6down(int);	/* Configure i/f down for IPv6 */
 int  sif6addr(int, eui64_t, eui64_t);
@@ -674,14 +674,14 @@ int  sif6addr(int, eui64_t, eui64_t);
 int  cif6addr(int, eui64_t, eui64_t);
 				/* Remove an IPv6 address from i/f */
 #endif
-int  sifdefaultroute(int, u_int32_t, u_int32_t);
+int  sifdefaultroute(int, u_int32_t, u_int32_t, bool replace_default_rt);
 				/* Create default route through i/f */
 int  cifdefaultroute(int, u_int32_t, u_int32_t);
 				/* Delete default route through i/f */
 #ifdef INET6
-int  sif6defaultroute (int, eui64_t, eui64_t);
+int  sif6defaultroute(int, eui64_t, eui64_t);
 				/* Create default IPv6 route through i/f */
-int  cif6defaultroute (int, eui64_t, eui64_t);
+int  cif6defaultroute(int, eui64_t, eui64_t);
 				/* Delete default IPv6 route through i/f */
 #endif
 int  sifproxyarp(int, u_int32_t);
@@ -701,7 +701,7 @@ int  set_filters(struct bpf_program *pass, struct bpf_program *active);
 				/* Set filter programs in kernel */
 #endif
 int  get_if_hwaddr(u_char *addr, char *name);
-const char *get_first_ethernet(void);
+int  get_first_ether_hwaddr(u_char *addr);
 int get_time(struct timeval *);
 				/* Get current time, monotonic if possible. */
 
@@ -724,7 +724,7 @@ int int_option(char *, int *);
 				/* Simplified number_option for decimal ints */
 void add_options(option_t *); /* Add extra options */
 void check_options(void);	/* check values after all options parsed */
-int  override_value(const char *, int, const char *);
+int  override_value(char *, int, const char *);
 				/* override value if permitted by priority */
 void print_options(printer_func, void *);
 				/* print out values of all options */
@@ -756,10 +756,6 @@ extern void (*multilink_join_hook)(void);
 
 #ifdef USE_EAPTLS
 extern int (*eaptls_passwd_hook)(char *user, char *passwd);
-#endif
-
-#ifdef USE_EAPTLS
-extern int (*eaptls_passwd_hook) (char *user, char *passwd);
 #endif
 
 /* Let a plugin snoop sent and received packets.  Useful for L2TP */

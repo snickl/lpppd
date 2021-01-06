@@ -161,12 +161,7 @@ static struct pam_conv pam_conv_data = {
 #endif /* #ifdef USE_PAM */
 
 int
-session_start(flags, user, passwd, ttyName, msg)
-    const int flags;
-    const char *user;
-    const char *passwd;
-    const char *ttyName;
-    char **msg;
+session_start(const int flags, const char *user, const char *passwd, const char *ttyName, char **msg)
 {
 #ifdef USE_PAM
     bool ok = 1;

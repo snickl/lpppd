@@ -28,6 +28,7 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -69,10 +70,7 @@ struct buffer_info {
  * always leaves destination null-terminated (for len > 0).
  */
 size_t
-strlcpy(dest, src, len)
-    char *dest;
-    const char *src;
-    size_t len;
+strlcpy(char *dest, const char *src, size_t len)
 {
     size_t ret = strlen(src);
 
@@ -92,10 +90,7 @@ strlcpy(dest, src, len)
  * always leaves destination null-terminated (for len > 0).
  */
 size_t
-strlcat(dest, src, len)
-    char *dest;
-    const char *src;
-    size_t len;
+strlcat(char *dest, const char *src, size_t len)
 {
     size_t dlen = strlen(dest);
 
@@ -129,11 +124,7 @@ slprintf(char *buf, int buflen, char *fmt, ...)
 #define OUTCHAR(c)	(buflen > 0? (--buflen, *buf++ = (c)): 0)
 
 int
-vslprintf(buf, buflen, fmt, args)
-    char *buf;
-    int buflen;
-    char *fmt;
-    va_list args;
+vslprintf(char *buf, int buflen, char *fmt, va_list args)
 {
     int c, i, n;
     int width, prec, fillch;
@@ -404,6 +395,7 @@ vslp_printer(void *arg, char *fmt, ...)
     struct buffer_info *bi;
 
     va_start(pvar, fmt);
+
     bi = (struct buffer_info *) arg;
     n = vslprintf(bi->ptr, bi->len, fmt, pvar);
     va_end(pvar);
@@ -418,11 +410,7 @@ vslp_printer(void *arg, char *fmt, ...)
  */
 
 void
-log_packet(p, len, prefix, level)
-    u_char *p;
-    int len;
-    char *prefix;
-    int level;
+log_packet(u_char *p, int len, char *prefix, int level)
 {
 	init_pr_log(prefix, level);
 	format_packet(p, len, pr_log, &level);
@@ -435,11 +423,7 @@ log_packet(p, len, prefix, level)
  * calling `printer(arg, format, ...)' to output it.
  */
 static void
-format_packet(p, len, printer, arg)
-    u_char *p;
-    int len;
-    printer_func printer;
-    void *arg;
+format_packet(u_char *p, int len, printer_func printer, void *arg)
 {
     int i, n;
     u_short proto;
@@ -489,9 +473,7 @@ static char *linep;		/* current pointer within line */
 static int llevel;		/* level for logging */
 
 void
-init_pr_log(prefix, level)
-     const char *prefix;
-     int level;
+init_pr_log(const char *prefix, int level)
 {
 	linep = line;
 	if (prefix != NULL) {
@@ -502,7 +484,7 @@ init_pr_log(prefix, level)
 }
 
 void
-end_pr_log()
+end_pr_log(void)
 {
 	if (linep != line) {
 		*linep = 0;
@@ -522,6 +504,7 @@ pr_log(void *arg, char *fmt, ...)
 	char buf[256];
 
 	va_start(pvar, fmt);
+
 	n = vslprintf(buf, sizeof(buf), fmt, pvar);
 	va_end(pvar);
 
@@ -564,11 +547,7 @@ pr_log(void *arg, char *fmt, ...)
  * printer.
  */
 void
-print_string(p, len, printer, arg)
-    char *p;
-    int len;
-    printer_func printer;
-    void *arg;
+print_string(char *p, int len, printer_func printer, void *arg)
 {
     int c;
 
@@ -602,10 +581,7 @@ print_string(p, len, printer, arg)
  * logit - does the hard work for fatal et al.
  */
 static void
-logit(level, fmt, args)
-    int level;
-    char *fmt;
-    va_list args;
+logit(int level, char *fmt, va_list args)
 {
     char buf[1024];
 
@@ -614,9 +590,7 @@ logit(level, fmt, args)
 }
 
 static void
-log_write(level, buf)
-    int level;
-    char *buf;
+log_write(int level, char *buf)
 {
     syslog(level, "%s", buf);
     if (log_to_fd >= 0 && (level != LOG_DEBUG || debug)) {
@@ -639,6 +613,7 @@ fatal(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_ERR, fmt, pvar);
     va_end(pvar);
 
@@ -654,6 +629,7 @@ error(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_ERR, fmt, pvar);
     va_end(pvar);
     ++error_count;
@@ -668,6 +644,7 @@ warn(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_WARNING, fmt, pvar);
     va_end(pvar);
 }
@@ -681,6 +658,7 @@ notice(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_NOTICE, fmt, pvar);
     va_end(pvar);
 }
@@ -694,6 +672,7 @@ info(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_INFO, fmt, pvar);
     va_end(pvar);
 }
@@ -707,6 +686,7 @@ dbglog(char *fmt, ...)
     va_list pvar;
 
     va_start(pvar, fmt);
+
     logit(LOG_DEBUG, fmt, pvar);
     va_end(pvar);
 }
@@ -769,7 +749,9 @@ complete_read(int fd, void *buf, size_t count)
 
 /* Procedures for locking the serial device using a lock file. */
 #ifndef LOCK_DIR
+#ifdef __linux__
 #define LOCK_DIR	"/var/lock"
+#endif
 #endif /* LOCK_DIR */
 
 static char lock_file[MAXPATHLEN];
@@ -778,8 +760,7 @@ static char lock_file[MAXPATHLEN];
  * lock - create a lock file for the named device
  */
 int
-lock(dev)
-    char *dev;
+lock(char *dev)
 {
     char lock_buffer[12];
     int fd, pid, n;
@@ -872,8 +853,7 @@ lock(dev)
  * between when the parent died and the child rewrote the lockfile).
  */
 int
-relock(pid)
-    int pid;
+relock(int pid)
 {
     int fd;
     char lock_buffer[12];
@@ -901,7 +881,7 @@ relock(pid)
  * unlock - remove our lockfile
  */
 void
-unlock()
+unlock(void)
 {
     if (lock_file[0]) {
 	unlink(lock_file);

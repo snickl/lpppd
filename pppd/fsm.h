@@ -85,34 +85,26 @@ typedef struct fsm {
 
 
 typedef struct fsm_callbacks {
-    void (*resetci)		/* Reset our Configuration Information */
-                   (fsm *);
-    int  (*cilen)		/* Length of our Configuration Information */
-                 (fsm *);
+    void (*resetci)(fsm *);	/* Reset our Configuration Information */
+    int  (*cilen)(fsm *);	/* Length of our Configuration Information */
     void (*addci) 		/* Add our Configuration Information */
-                 (fsm *, u_char *, int *);
+		(fsm *, u_char *, int *);
     int  (*ackci)		/* ACK our Configuration Information */
-                 (fsm *, u_char *, int);
+		(fsm *, u_char *, int);
     int  (*nakci)		/* NAK our Configuration Information */
-                 (fsm *, u_char *, int, int);
+		(fsm *, u_char *, int, int);
     int  (*rejci)		/* Reject our Configuration Information */
-                 (fsm *, u_char *, int);
+		(fsm *, u_char *, int);
     int  (*reqci)		/* Request peer's Configuration Information */
-                 (fsm *, u_char *, int *, int);
-    void (*up)			/* Called when fsm reaches OPENED state */
-              (fsm *);
-    void (*down)		/* Called when fsm leaves OPENED state */
-                (fsm *);
-    void (*starting)		/* Called when we want the lower layer */
-                    (fsm *);
-    void (*finished)		/* Called when we don't want the lower layer */
-                    (fsm *);
-    void (*protreject)		/* Called when Protocol-Reject received */
-                      (int);
-    void (*retransmit)		/* Retransmission is necessary */
-                      (fsm *);
+		(fsm *, u_char *, int *, int);
+    void (*up)(fsm *);		/* Called when fsm reaches OPENED state */
+    void (*down)(fsm *);	/* Called when fsm leaves OPENED state */
+    void (*starting)(fsm *);	/* Called when we want the lower layer */
+    void (*finished)(fsm *);	/* Called when we don't want the lower layer */
+    void (*protreject)(int);	/* Called when Protocol-Reject received */
+    void (*retransmit)(fsm *);	/* Retransmission is necessary */
     int  (*extcode)		/* Called when unknown code received */
-                   (fsm *, int, int, u_char *, int);
+		(fsm *, int, int, u_char *, int);
     char *proto_name;		/* String name for protocol (for messages) */
 } fsm_callbacks;
 
@@ -146,26 +138,20 @@ typedef struct fsm_callbacks {
 #define DEFTIMEOUT	3	/* Timeout time in seconds */
 #define DEFMAXTERMREQS	2	/* Maximum Terminate-Request transmissions */
 #define DEFMAXCONFREQS	10	/* Maximum Configure-Request transmissions */
-/*
- * Some 3G modems use repeated IPCP NAKs as a way of stalling
- * until they can contact a server on the network, so by default
- * we accept a large number of NAKs before we start treating
- * them as rejects.
- */
-#define DEFMAXNAKLOOPS	100	/* Maximum number of nak loops */
+#define DEFMAXNAKLOOPS	5	/* Maximum number of nak loops */
 
 
 /*
  * Prototypes
  */
-void fsm_init(fsm *);
-void fsm_lowerup(fsm *);
-void fsm_lowerdown(fsm *);
-void fsm_open(fsm *);
-void fsm_close(fsm *, char *);
-void fsm_input(fsm *, u_char *, int);
-void fsm_protreject(fsm *);
-void fsm_sdata(fsm *, int, int, u_char *, int);
+void fsm_init (fsm *);
+void fsm_lowerup (fsm *);
+void fsm_lowerdown (fsm *);
+void fsm_open (fsm *);
+void fsm_close (fsm *, char *);
+void fsm_input (fsm *, u_char *, int);
+void fsm_protreject (fsm *);
+void fsm_sdata (fsm *, int, int, u_char *, int);
 
 
 /*

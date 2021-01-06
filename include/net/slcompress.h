@@ -139,9 +139,10 @@ struct slcompress {
 
 void	sl_compress_init(struct slcompress *);
 void	sl_compress_setup(struct slcompress *, int);
-u_int	sl_compress_tcp(struct mbuf *, struct ip *, struct slcompress *, int);
+u_int	sl_compress_tcp(struct mbuf *,
+	    struct ip *, struct slcompress *, int);
 int	sl_uncompress_tcp(u_char **, int, u_int, struct slcompress *);
 int	sl_uncompress_tcp_core(u_char *, int, int, u_int,
-	                       struct slcompress *, u_char **, u_int *);
+	    struct slcompress *, u_char **, u_int *);
 
 #endif /* _SLCOMPRESS_H_ */

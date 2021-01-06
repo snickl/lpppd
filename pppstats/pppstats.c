@@ -89,7 +89,7 @@ static void intpr(void);
 int main(int, char *argv[]);
 
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: %s [-a|-d] [-v|-r|-z] [-c count] [-w wait] [interface]\n",
 	    progname);
@@ -101,16 +101,14 @@ usage()
  * Sets a flag to not wait for the alarm.
  */
 static void
-catchalarm(arg)
-    int arg;
+catchalarm(int arg)
 {
     signalled = 1;
 }
 
 
 static void
-get_ppp_stats(curp)
-    struct ppp_stats *curp;
+get_ppp_stats(struct ppp_stats *curp)
 {
     struct ifpppstatsreq req;
 
@@ -132,8 +130,7 @@ get_ppp_stats(curp)
 }
 
 static void
-get_ppp_cstats(csp)
-    struct ppp_comp_stats *csp;
+get_ppp_cstats(struct ppp_comp_stats *csp)
 {
     struct ifpppcstatsreq creq;
 
@@ -156,6 +153,7 @@ get_ppp_cstats(csp)
 	}
     }
 
+#ifdef __linux__
     if (creq.stats.c.bytes_out == 0) {
 	creq.stats.c.bytes_out = creq.stats.c.comp_bytes + creq.stats.c.inc_bytes;
 	creq.stats.c.in_count = creq.stats.c.unc_bytes;
@@ -175,6 +173,7 @@ get_ppp_cstats(csp)
     else
 	creq.stats.d.ratio = 256.0 * creq.stats.d.in_count /
 			     creq.stats.d.bytes_out;
+#endif
 
     *csp = creq.stats;
 }
@@ -196,7 +195,7 @@ get_ppp_cstats(csp)
  * First line printed is cumulative.
  */
 static void
-intpr()
+intpr(void)
 {
     register int line = 0;
     sigset_t oldmask, mask;
@@ -353,9 +352,7 @@ intpr()
 }
 
 int
-main(argc, argv)
-    int argc;
-    char *argv[];
+main(int argc, char *argv[])
 {
     int c;
 

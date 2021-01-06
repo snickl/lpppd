@@ -48,12 +48,6 @@
  * Implemented EAP-TLS authentication
  */
 
-#define RCSID	"$Id: eap.c,v 1.4 2004/11/09 22:39:25 paulus Exp $"
-
-/*
- * TODO:
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -123,13 +117,13 @@ static option_t eap_option_list[] = {
 /*
  * Protocol entry points.
  */
-static void eap_init(int unit);
-static void eap_input(int unit, u_char *inp, int inlen);
-static void eap_protrej(int unit);
-static void eap_lowerup(int unit);
-static void eap_lowerdown(int unit);
-static int  eap_printpkt(u_char *inp, int inlen,
-                         void (*)(void *arg, char *fmt, ...), void *arg);
+static void eap_init (int unit);
+static void eap_input (int unit, u_char *inp, int inlen);
+static void eap_protrej (int unit);
+static void eap_lowerup (int unit);
+static void eap_lowerdown (int unit);
+static int  eap_printpkt (u_char *inp, int inlen,
+    void (*)(void *arg, char *fmt, ...), void *arg);
 
 struct protent eap_protent = {
 	PPP_EAP,		/* protocol number */
@@ -151,6 +145,7 @@ struct protent eap_protent = {
 	NULL			/* say whether to bring up link for this pkt */
 };
 
+#ifdef USE_SRP
 /*
  * A well-known 2048 bit modulus.
  */
@@ -188,16 +183,16 @@ static const u_char wkmodulus[] = {
 	0x9B, 0x65, 0xE3, 0x72, 0xFC, 0xD6, 0x8E, 0xF2,
 	0x0F, 0xA7, 0x11, 0x1F, 0x9E, 0x4A, 0xFF, 0x73
 };
+#endif /* USE_SRP */
 
 /* Local forward declarations. */
-static void eap_server_timeout(void *arg);
+static void eap_server_timeout (void *arg);
 
 /*
  * Convert EAP state code to printable string for debug.
  */
 static const char *
-eap_state_name(esc)
-enum eap_state_code esc;
+eap_state_name(enum eap_state_code esc)
 {
 	static const char *state_names[] = { EAP_STATES };
 
@@ -209,8 +204,7 @@ enum eap_state_code esc;
  * called once by main() during start-up.
  */
 static void
-eap_init(unit)
-int unit;
+eap_init(int unit)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -231,8 +225,7 @@ int unit;
  * Request messages.
  */
 static void
-eap_client_timeout(arg)
-void *arg;
+eap_client_timeout(void *arg)
 {
 	eap_state *esp = (eap_state *) arg;
 
@@ -251,9 +244,7 @@ void *arg;
  * after eap_lowerup.
  */
 void
-eap_authwithpeer(unit, localname)
-int unit;
-char *localname;
+eap_authwithpeer(int unit, char *localname)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -277,8 +268,7 @@ char *localname;
  * (Server operation)
  */
 static void
-eap_send_failure(esp)
-eap_state *esp;
+eap_send_failure(eap_state *esp)
 {
 	u_char *outp;
 
@@ -302,8 +292,7 @@ eap_state *esp;
  * (Server operation)
  */
 static void
-eap_send_success(esp)
-eap_state *esp;
+eap_send_success(eap_state *esp)
 {
 	u_char *outp;
 
@@ -357,11 +346,7 @@ struct b64state {
 };
 
 static int
-b64enc(bs, inp, inlen, outp)
-struct b64state *bs;
-u_char *inp;
-int inlen;
-u_char *outp;
+b64enc(struct b64state *bs, u_char *inp, int inlen, u_char *outp)
 {
 	int outlen = 0;
 
@@ -383,9 +368,7 @@ u_char *outp;
 }
 
 static int
-b64flush(bs, outp)
-struct b64state *bs;
-u_char *outp;
+b64flush(struct b64state *bs, u_char *outp)
 {
 	int outlen = 0;
 
@@ -405,11 +388,7 @@ u_char *outp;
 }
 
 static int
-b64dec(bs, inp, inlen, outp)
-struct b64state *bs;
-u_char *inp;
-int inlen;
-u_char *outp;
+b64dec(struct b64state *bs, u_char *inp, int inlen, u_char *outp)
 {
 	int outlen = 0;
 	char *cp;
@@ -437,9 +416,7 @@ u_char *outp;
  * 0 for success and non-zero for failure.
  */
 static void
-eap_figure_next_state(esp, status)
-eap_state *esp;
-int status;
+eap_figure_next_state(eap_state *esp, int status)
 {
 #ifdef USE_SRP
 	unsigned char secbuf[MAXWORDLEN], clear[8], *sp, *dp;
@@ -736,8 +713,7 @@ int status;
  * type depends on current state.  (Server operation)
  */
 static void
-eap_send_request(esp)
-eap_state *esp;
+eap_send_request(eap_state *esp)
 {
 	u_char *outp;
 	u_char *lenloc;
@@ -994,9 +970,7 @@ eap_state *esp;
  * after eap_lowerup.
  */
 void
-eap_authpeer(unit, localname)
-int unit;
-char *localname;
+eap_authpeer(int unit, char *localname)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -1024,8 +998,7 @@ char *localname;
  * expired.
  */
 static void
-eap_server_timeout(arg)
-void *arg;
+eap_server_timeout(void *arg)
 {
 #ifdef USE_EAPTLS
 	u_char *outp;
@@ -1088,8 +1061,7 @@ void *arg;
  * will restart the timer.  If it fails, then the link is dropped.
  */
 static void
-eap_rechallenge(arg)
-void *arg;
+eap_rechallenge(void *arg)
 {
 	eap_state *esp = (eap_state *)arg;
 
@@ -1105,8 +1077,7 @@ void *arg;
 }
 
 static void
-srp_lwrechallenge(arg)
-void *arg;
+srp_lwrechallenge(void *arg)
 {
 	eap_state *esp = (eap_state *)arg;
 
@@ -1129,8 +1100,7 @@ void *arg;
  * thing.
  */
 static void
-eap_lowerup(unit)
-int unit;
+eap_lowerup(int unit)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -1153,8 +1123,7 @@ int unit;
  * Cancel all timeouts and return to initial state.
  */
 static void
-eap_lowerdown(unit)
-int unit;
+eap_lowerdown(int unit)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -1188,8 +1157,7 @@ int unit;
  * failure.
  */
 static void
-eap_protrej(unit)
-int unit;
+eap_protrej(int unit)
 {
 	eap_state *esp = &eap_states[unit];
 
@@ -1208,12 +1176,8 @@ int unit;
  * Format and send a regular EAP Response message.
  */
 static void
-eap_send_response(esp, id, typenum, str, lenstr)
-eap_state *esp;
-u_char id;
-u_char typenum;
-u_char *str;
-int lenstr;
+eap_send_response(eap_state *esp, u_char id, u_char typenum,
+		  u_char *str, int lenstr)
 {
 	u_char *outp;
 	int msglen;
@@ -1239,12 +1203,8 @@ int lenstr;
  * Format and send an MD5-Challenge EAP Response message.
  */
 static void
-eap_chap_response(esp, id, hash, name, namelen)
-eap_state *esp;
-u_char id;
-u_char *hash;
-char *name;
-int namelen;
+eap_chap_response(eap_state *esp, u_char id, u_char *hash,
+		  char *name, int namelen)
 {
 	u_char *outp;
 	int msglen;
@@ -1275,12 +1235,8 @@ int namelen;
  * Format and send a SRP EAP Response message.
  */
 static void
-eap_srp_response(esp, id, subtypenum, str, lenstr)
-eap_state *esp;
-u_char id;
-u_char subtypenum;
-u_char *str;
-int lenstr;
+eap_srp_response(eap_state *esp, u_char id, u_char subtypenum,
+		 u_char *str, int lenstr)
 {
 	u_char *outp;
 	int msglen;
@@ -1307,11 +1263,7 @@ int lenstr;
  * Format and send a SRP EAP Client Validator Response message.
  */
 static void
-eap_srpval_response(esp, id, flags, str)
-eap_state *esp;
-u_char id;
-u_int32_t flags;
-u_char *str;
+eap_srpval_response(eap_state *esp, u_char id, u_int32_t flags, u_char *str)
 {
 	u_char *outp;
 	int msglen;
@@ -1340,9 +1292,7 @@ u_char *str;
  * Send an EAP-TLS response message with tls data
  */
 static void
-eap_tls_response(esp, id)
-eap_state *esp;
-u_char id;
+eap_tls_response(eap_state *esp, u_char id)
 {
 	u_char *outp;
 	int outlen;
@@ -1379,9 +1329,7 @@ u_char id;
  * Send an EAP-TLS ack
  */
 static void
-eap_tls_sendack(esp, id)
-eap_state *esp;
-u_char id;
+eap_tls_sendack(eap_state *esp, u_char id)
 {
 	u_char *outp;
 	int outlen;
@@ -1409,10 +1357,7 @@ u_char id;
 #endif /* USE_EAPTLS */
 
 static void
-eap_send_nak(esp, id, type)
-eap_state *esp;
-u_char id;
-u_char type;
+eap_send_nak(eap_state *esp, u_char id, u_char type)
 {
 	u_char *outp;
 	int msglen;
@@ -1434,7 +1379,7 @@ u_char type;
 
 #ifdef USE_SRP
 static char *
-name_of_pn_file()
+name_of_pn_file(void)
 {
 	char *user, *path, *file;
 	struct passwd *pw;
@@ -1460,8 +1405,7 @@ name_of_pn_file()
 }
 
 static int
-open_pn_file(modebits)
-mode_t modebits;
+open_pn_file(mode_t modebits)
 {
 	char *path;
 	int fd, err;
@@ -1476,7 +1420,7 @@ mode_t modebits;
 }
 
 static void
-remove_pn_file()
+remove_pn_file(void)
 {
 	char *path;
 
@@ -1487,10 +1431,7 @@ remove_pn_file()
 }
 
 static void
-write_pseudonym(esp, inp, len, id)
-eap_state *esp;
-u_char *inp;
-int len, id;
+write_pseudonym(eap_state *esp, u_char *inp, int len, int id)
 {
 	u_char val;
 	u_char *datp, *digp;
@@ -1549,11 +1490,7 @@ int len, id;
  * eap_request - Receive EAP Request message (client mode).
  */
 static void
-eap_request(esp, inp, id, len)
-eap_state *esp;
-u_char *inp;
-int id;
-int len;
+eap_request(eap_state *esp, u_char *inp, int id, int len)
 {
 	u_char typenum;
 	u_char vallen;
@@ -1638,7 +1575,7 @@ int len;
 			esp->es_usedpseudo = 2;
 		}
 #endif /* USE_SRP */
-		eap_send_response(esp, id, typenum, esp->es_client.ea_name,
+		eap_send_response(esp, id, typenum, (u_char *)esp->es_client.ea_name,
 		    esp->es_client.ea_namelen);
 		break;
 
@@ -2041,13 +1978,13 @@ int len;
 	}
 	return;
 
-#ifdef USE_SRP
 client_failure:
 	esp->es_client.ea_state = eapBadAuth;
 	if (esp->es_client.ea_timeout > 0) {
 		UNTIMEOUT(eap_client_timeout, (void *)esp);
 	}
 	esp->es_client.ea_session = NULL;
+#ifdef USE_SRP
 	t_clientclose(tc);
 	auth_withpeer_fail(esp->es_unit, PPP_EAP);
 #endif /* USE_SRP */
@@ -2057,11 +1994,7 @@ client_failure:
  * eap_response - Receive EAP Response message (server mode).
  */
 static void
-eap_response(esp, inp, id, len)
-eap_state *esp;
-u_char *inp;
-int id;
-int len;
+eap_response(eap_state *esp, u_char *inp, int id, int len)
 {
 	u_char typenum;
 	u_char vallen;
@@ -2427,11 +2360,7 @@ int len;
  * eap_success - Receive EAP Success message (client mode).
  */
 static void
-eap_success(esp, inp, id, len)
-eap_state *esp;
-u_char *inp;
-int id;
-int len;
+eap_success(eap_state *esp, u_char *inp, int id, int len)
 {
 	if (esp->es_client.ea_state != eapOpen && !eap_client_active(esp)
 #ifdef USE_EAPTLS
@@ -2471,11 +2400,7 @@ int len;
  * eap_failure - Receive EAP Failure message (client mode).
  */
 static void
-eap_failure(esp, inp, id, len)
-eap_state *esp;
-u_char *inp;
-int id;
-int len;
+eap_failure(eap_state *esp, u_char *inp, int id, int len)
 {
 	/*
 	 * Ignore failure messages if we're not open
@@ -2508,10 +2433,7 @@ int len;
  * eap_input - Handle received EAP message.
  */
 static void
-eap_input(unit, inp, inlen)
-int unit;
-u_char *inp;
-int inlen;
+eap_input(int unit, u_char *inp, int inlen)
 {
 	eap_state *esp = &eap_states[unit];
 	u_char code, id;
@@ -2572,15 +2494,14 @@ static char *eap_typenames[] = {
 	"OTP", "Generic-Token", NULL, NULL,
 	"RSA", "DSS", "KEA", "KEA-Validate",
 	"TLS", "Defender", "Windows 2000", "Arcot",
-	"Cisco", "Nokia", "SRP"
+	"Cisco", "Nokia", "SRP", NULL,
+	"TTLS", "RAS", "AKA", "3COM", "PEAP",
+	"MSCHAPv2"
 };
 
 static int
-eap_printpkt(inp, inlen, printer, arg)
-u_char *inp;
-int inlen;
-void (*printer)(void *, char *, ...);
-void *arg;
+eap_printpkt(u_char *inp, int inlen,
+	     void (*printer) (void *, char *, ...), void *arg)
 {
 	int code, id, len, rtype, vallen;
 	u_char *pstart;
@@ -2809,7 +2730,7 @@ void *arg;
 			len--;
 			printer(arg, " <Suggested-type %02X", rtype);
 			if (rtype >= 1 &&
-			    rtype < sizeof (eap_typenames) / sizeof (char *))
+			    rtype <= sizeof (eap_typenames) / sizeof (char *))
 				printer(arg, " (%s)", eap_typenames[rtype-1]);
 			printer(arg, ">");
 			break;
