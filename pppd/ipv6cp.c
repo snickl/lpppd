@@ -525,7 +525,8 @@ ipv6cp_resetci(fsm *f)
     
     if (!wo->opt_local) {
 	wo->accept_local = 1;
-	eui64_magic_nz(wo->ourid);
+	if (!demand)
+	    eui64_magic_nz(wo->ourid);
     }
     if (!wo->opt_remote)
 	wo->accept_remote = 1;
@@ -1066,7 +1067,7 @@ ether_to_eui64(eui64_t *p_eui64)
 {
     u_char addr[6];
 
-    if (get_if_hwaddr(addr, devnam) < 0 || get_first_ether_hwaddr(addr) < 0) {
+    if (get_if_hwaddr(addr, devnam) < 0 && get_first_ether_hwaddr(addr) < 0) {
         error("ipv6cp: no persistent id can be found");
         return 0;
     }
@@ -1103,7 +1104,7 @@ ipv6_check_options(void)
      * Persistent link-local id is only used when user has not explicitly
      * configure/hard-code the id
      */
-    if ((wo->use_persistent) && (!wo->opt_local) && (!wo->opt_remote)) {
+    if ((wo->use_persistent) && (!wo->opt_local)) {
 
 	/* 
 	 * On systems where there are no Ethernet interfaces used, there
@@ -1137,11 +1138,6 @@ ipv6_check_options(void)
 		wo->opt_remote = 1;
 	}
     }
-
-    if (demand && (eui64_iszero(wo->ourid) || eui64_iszero(wo->hisid))) {
-	option_error("local/remote LL address required for demand-dialling\n");
-	exit(EXIT_OPTION_ERROR);
-    }
 }
 
 
@@ -1153,6 +1149,15 @@ static int
 ipv6_demand_conf(int u)
 {
     ipv6cp_options *wo = &ipv6cp_wantoptions[u];
+
+    if (eui64_iszero(wo->hisid)) {
+	/* make up an arbitrary identifier for the peer */
+	eui64_magic_nz(wo->hisid);
+    }
+    if (eui64_iszero(wo->ourid)) {
+	/* make up an arbitrary identifier for us */
+	eui64_magic_nz(wo->ourid);
+    }
 
     if (!sif6up(u))
 	return 0;
@@ -1168,7 +1173,6 @@ ipv6_demand_conf(int u)
 	if (sif6defaultroute(u, wo->ourid, wo->hisid))
 	    default_route_set[u] = 1;
 
-    notice("ipv6_demand_conf");
     notice("local  LL address %s", llv6_ntoa(wo->ourid));
     notice("remote LL address %s", llv6_ntoa(wo->hisid));
 
@@ -1235,7 +1239,7 @@ ipv6cp_up(fsm *f)
 	    if (! eui64_equals(ho->hisid, wo->hisid))
 		warn("Remote LL address changed to %s", 
 		     llv6_ntoa(ho->hisid));
-	    ipv6cp_clear_addrs(f->unit, go->ourid, ho->hisid);
+	    ipv6cp_clear_addrs(f->unit, wo->ourid, wo->hisid);
 
 	    /* Set the interface to the new addresses */
 	    if (!sif6addr(f->unit, go->ourid, ho->hisid)) {

@@ -669,8 +669,9 @@ ipcp_resetci(fsm *f)
     ipcp_options *go = &ipcp_gotoptions[f->unit];
     ipcp_options *ao = &ipcp_allowoptions[f->unit];
 
-    wo->req_addr = (wo->neg_addr || wo->old_addrs) &&
-	(ao->neg_addr || ao->old_addrs);
+    wo->req_addr = ((wo->neg_addr || wo->old_addrs) &&
+	(ao->neg_addr || ao->old_addrs)) ||
+	(wo->hisaddr && !wo->accept_remote);
     if (wo->ouraddr == 0)
 	wo->accept_local = 1;
     if (wo->hisaddr == 0)
@@ -985,6 +986,7 @@ bad:
 static int
 ipcp_nakci(fsm *f, u_char *p, int len, int treat_as_reject)
 {
+    ipcp_options *wo = &ipcp_wantoptions[f->unit];
     ipcp_options *go = &ipcp_gotoptions[f->unit];
     u_char cimaxslotindex, cicflag;
     u_char citype, cilen, *next;
@@ -1160,7 +1162,7 @@ ipcp_nakci(fsm *f, u_char *p, int len, int treat_as_reject)
 	    GETLONG(l, p);
 	    ciaddr1 = htonl(l);
 	    if (ciaddr1 && go->accept_local)
-		try.ouraddr = ciaddr1;
+		try.ouraddr = wo->old_addrs ? ciaddr1 : 0;
 	    GETLONG(l, p);
 	    ciaddr2 = htonl(l);
 	    if (ciaddr2 && go->accept_remote)
@@ -1175,7 +1177,7 @@ ipcp_nakci(fsm *f, u_char *p, int len, int treat_as_reject)
 	    ciaddr1 = htonl(l);
 	    if (ciaddr1 && go->accept_local)
 		try.ouraddr = ciaddr1;
-	    if (try.ouraddr != 0)
+	    if (try.ouraddr != 0 && wo->neg_addr)
 		try.neg_addr = 1;
 	    no.neg_addr = 1;
 	    break;
@@ -1461,7 +1463,7 @@ ipcp_reqci(fsm *f, u_char *inp,	int *len, int reject_if_disagree)
 	    if (ciaddr2 != wo->ouraddr) {
 		if (ciaddr2 == 0 || !wo->accept_local) {
 		    orc = CONFNAK;
-		    if (!reject_if_disagree) {
+		    if (!reject_if_disagree && wo->old_addrs) {
 			DECPTR(sizeof(u_int32_t), p);
 			tl = ntohl(wo->ouraddr);
 			PUTLONG(tl, p);
@@ -1638,7 +1640,8 @@ endswitch:
      * option safely.
      */
     if (rc != CONFREJ && !ho->neg_addr && !ho->old_addrs &&
-	wo->req_addr && !reject_if_disagree && !noremoteip) {
+	wo->req_addr && !reject_if_disagree &&
+	((wo->hisaddr && !wo->accept_remote) || !noremoteip)) {
 	if (rc == CONFACK) {
 	    rc = CONFNAK;
 	    ucp = inp;			/* reset pointer */
@@ -1750,6 +1753,12 @@ ipcp_up(fsm *f)
     /*
      * We must have a non-zero IP address for both ends of the link.
      */
+
+    if (wo->hisaddr && !wo->accept_remote && (!(ho->neg_addr || ho->old_addrs) || ho->hisaddr != wo->hisaddr)) {
+	error("Peer refused to agree to his IP address");
+	ipcp_close(f->unit, "Refused his IP address");
+	return;
+    }
     if (!ho->neg_addr && !ho->old_addrs)
 	ho->hisaddr = wo->hisaddr;
 
@@ -1813,9 +1822,10 @@ ipcp_up(fsm *f)
 		wo->ouraddr = go->ouraddr;
 	    } else
 		script_unsetenv("OLDIPLOCAL");
-	    if (ho->hisaddr != wo->hisaddr && wo->hisaddr != 0) {
+	    if (ho->hisaddr != wo->hisaddr) {
 		warn("Remote IP address changed to %I", ho->hisaddr);
-		script_setenv("OLDIPREMOTE", ip_ntoa(wo->hisaddr), 0);
+		if (wo->hisaddr != 0)
+		    script_setenv("OLDIPREMOTE", ip_ntoa(wo->hisaddr), 0);
 		wo->hisaddr = ho->hisaddr;
 	    } else
 		script_unsetenv("OLDIPREMOTE");
