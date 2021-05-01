@@ -3,6 +3,7 @@
 *.o
 *.so
 *.a
+*.pc
 *.cat8
 *.cmake
 include/config.h

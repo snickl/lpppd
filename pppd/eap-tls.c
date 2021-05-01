@@ -56,10 +56,12 @@ typedef struct pw_cb_data
     const char *prompt_info;
 } PW_CB_DATA;
 
+#ifndef OPENSSL_NO_ENGINE
 /* The openssl configuration file and engines can be loaded only once */
 static CONF   *ssl_config  = NULL;
 static ENGINE *cert_engine = NULL;
 static ENGINE *pkey_engine = NULL;
+#endif
 
 /* TLSv1.3 do we have a session ticket ? */
 static int have_session_ticket = 0;
@@ -70,7 +72,50 @@ void ssl_msg_callback(int write_p, int version, int ct, const void *buf,
 int ssl_new_session_cb(SSL *s, SSL_SESSION *sess);
 
 X509 *get_X509_from_file(char *filename);
-int ssl_cmp_certs(char *filename, X509 * a);
+int ssl_cmp_certs(char *filename, X509 * a); 
+
+/*
+ *  OpenSSL 1.1+ introduced a generic TLS_method()
+ *  For older releases we substitute the appropriate method
+ */
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+
+#define TLS_method SSLv23_method
+
+#define SSL3_RT_HEADER  0x100
+
+#ifndef SSL_CTX_set_max_proto_version
+/** Mimics SSL_CTX_set_max_proto_version for OpenSSL < 1.1 */
+static inline int SSL_CTX_set_max_proto_version(SSL_CTX *ctx, long tls_ver_max)
+{
+    long sslopt = 0;
+
+    if (tls_ver_max < TLS1_VERSION)
+    {
+        sslopt |= SSL_OP_NO_TLSv1;
+    }
+#ifdef SSL_OP_NO_TLSv1_1
+    if (tls_ver_max < TLS1_1_VERSION)
+    {
+        sslopt |= SSL_OP_NO_TLSv1_1;
+    }
+#endif
+#ifdef SSL_OP_NO_TLSv1_2
+    if (tls_ver_max < TLS1_2_VERSION)
+    {
+        sslopt |= SSL_OP_NO_TLSv1_2;
+    }
+#endif
+    SSL_CTX_set_options(ctx, sslopt);
+
+    return 1;
+}
+#endif /* SSL_CTX_set_max_proto_version */
+
+#endif /* OPENSSL_VERSION_NUMBER < 0x10100000L */
+
+
 
 void log_ssl_errors( void )
 {
@@ -114,7 +159,9 @@ CONF *eaptls_ssl_load_config( void )
     }
 
     dbglog( "Loading OpenSSL built-ins" );
+#ifndef OPENSSL_NO_ENGINE
     ENGINE_load_builtin_engines();
+#endif
     OPENSSL_load_builtin_modules();
 
     dbglog( "Loading OpenSSL configured modules" );
@@ -128,6 +175,7 @@ CONF *eaptls_ssl_load_config( void )
     return config;
 }
 
+#ifndef OPENSSL_NO_ENGINE
 ENGINE *eaptls_ssl_load_engine( char *engine_name )
 {
     ENGINE      *e = NULL;
@@ -172,7 +220,7 @@ ENGINE *eaptls_ssl_load_engine( char *engine_name )
 
     return e;
 }
-
+#endif
 
 
 /*
@@ -182,10 +230,12 @@ ENGINE *eaptls_ssl_load_engine( char *engine_name )
 SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
             char *certfile, char *peer_certfile, char *privkeyfile)
 {
+#ifndef OPENSSL_NO_ENGINE
     char        *cert_engine_name = NULL;
     char        *cert_identifier = NULL;
     char        *pkey_engine_name = NULL;
     char        *pkey_identifier = NULL;
+#endif
     SSL_CTX     *ctx;
     SSL         *ssl;
     X509_STORE  *certstore;
@@ -224,11 +274,13 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
     SSL_library_init();
     SSL_load_error_strings();
 
+#ifndef OPENSSL_NO_ENGINE
     /* load the openssl config file only once and load it before triggering
        the loading of a global openssl config file via SSL_CTX_new()
      */
     if (!ssl_config)
         ssl_config = eaptls_ssl_load_config();
+#endif
 
     ctx = SSL_CTX_new(TLS_method());
 
@@ -237,6 +289,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
         goto fail;
     }
 
+#ifndef OPENSSL_NO_ENGINE
     /* if the certificate filename is of the form engine:id. e.g.
         pkcs11:12345
        then we try to load and use this engine.
@@ -312,6 +365,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
         else
             pkey_engine = eaptls_ssl_load_engine( pkey_engine_name );
     }
+#endif
 
     SSL_CTX_set_default_passwd_cb (ctx, password_callback);
 
@@ -329,6 +383,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
     if (init_server)
         SSL_CTX_set_client_CA_list(ctx, SSL_load_client_CA_file(cacertfile));
 
+#ifndef OPENSSL_NO_ENGINE
     if (cert_engine)
     {
         struct
@@ -363,6 +418,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
         }
     }
     else
+#endif
     {
         if (!SSL_CTX_use_certificate_chain_file(ctx, certfile))
         {
@@ -399,6 +455,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
     }
     SSL_free(ssl);
 
+#ifndef OPENSSL_NO_ENGINE
     if (pkey_engine)
     {
         EVP_PKEY   *pkey = NULL;
@@ -451,6 +508,7 @@ SSL_CTX *eaptls_init_ssl(int init_server, char *cacertfile, char *capath,
         }
     }
     else
+#endif
     {
         if (!SSL_CTX_use_PrivateKey_file(ctx, privkeyfile, SSL_FILETYPE_PEM))
         {
@@ -1101,7 +1159,10 @@ int ssl_verify_callback(int ok, X509_STORE_CTX * ctx)
          * If acting as client and the name of the server wasn't specified
          * explicitely, we can't verify the server authenticity
          */
-        if (!ets->peer[0] || !strcmp(tls_verify_method, TLS_VERIFY_NONE)) {
+        if (!tls_verify_method)
+            tls_verify_method = TLS_VERIFY_NONE;
+
+        if (!ets->peer[0] || !strcmp(TLS_VERIFY_NONE, tls_verify_method)) {
             warn("Certificate verication disabled or no peer name was specified");
             return ok;
         }
